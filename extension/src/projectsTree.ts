@@ -130,6 +130,17 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
   }
 
   async addProject(name: string, projectPath: string): Promise<void> {
+    // 1. Validation: Check for package.json
+    const packageJsonPath = vscode.Uri.file(projectPath + "/package.json");
+    try {
+      await vscode.workspace.fs.stat(packageJsonPath);
+    } catch {
+      vscode.window.showErrorMessage(
+        "Invalid project: No package.json found in the selected folder.",
+      );
+      return;
+    }
+
     if (this.projects.some((p) => p.path === projectPath)) {
       vscode.window.showWarningMessage("Project already added.");
       return;

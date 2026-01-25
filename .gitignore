@@ -31,3 +31,4 @@ yarn-error.log*
 # Project specific
 staggered_run.log
 logs/
+extension/dist/

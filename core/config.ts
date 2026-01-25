@@ -126,6 +126,12 @@ export function loadConfig(projectPath?: string): GenAIPreviewConfig {
   if (process.env.GENAI_API_KEY) {
     config.ai.apiKey = process.env.GENAI_API_KEY;
   }
+  if (process.env.GENAI_PORT) {
+    const parsed = parseInt(process.env.GENAI_PORT, 10);
+    if (!isNaN(parsed)) {
+      config.port = parsed;
+    }
+  }
 
   cachedConfig = config;
   return config;
