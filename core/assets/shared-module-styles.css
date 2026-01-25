@@ -1,0 +1,92 @@
+
+/*
+    Shared Module Styles
+    Common variables and mixins for use across all feature modules.
+*/
+
+:root {
+    --module-primary-color: #3f51b5;
+    --module-secondary-color: #f50057;
+    --module-background-color: #ffffff;
+    --module-text-color: #333333;
+    --module-border-color: #e0e0e0;
+    --module-padding: 16px;
+    --module-border-radius: 8px;
+    --module-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.module-container {
+    padding: var(--module-padding);
+    background-color: var(--module-background-color);
+    border-radius: var(--module-border-radius);
+    box-shadow: var(--module-shadow);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--module-padding);
+    border-bottom: 1px solid var(--module-border-color);
+    padding-bottom: 8px;
+}
+
+.module-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--module-primary-color);
+}
+
+.module-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.form-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.form-button.primary {
+    background-color: var(--module-primary-color);
+    color: white;
+}
+
+.form-button.primary:hover {
+    background-color: darken(var(--module-primary-color), 10%);
+}
+
+.form-button.secondary {
+    background-color: transparent;
+    border: 1px solid var(--module-border-color);
+    color: var(--module-text-color);
+}
+
+.form-button.secondary:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--module-border-color);
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: var(--module-text-color);
+}

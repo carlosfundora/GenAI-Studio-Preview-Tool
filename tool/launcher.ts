@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import portfinder from "portfinder";
 import prompts from "prompts";
+import qrcode from "qrcode-terminal";
 import { createServer } from "vite";
 
 // --- Modular Imports ---
@@ -30,12 +31,14 @@ async function scanForVersions(rootDir: string): Promise<VersionInfo[]> {
   // 1. Scan .versions/legacy
   const legacyDir = path.join(rootDir, ".versions/legacy");
   if (fs.existsSync(legacyDir)) {
-    const folders = await glob("*", { cwd: legacyDir, onlyDirectories: true });
+    const folders = (
+      await glob("*", { cwd: legacyDir, withFileTypes: true })
+    ).filter((dirent) => dirent.isDirectory());
     folders.forEach((folder) => {
-      if (fs.existsSync(path.join(legacyDir, folder, "package.json"))) {
+      if (fs.existsSync(path.join(legacyDir, folder.name, "package.json"))) {
         versions.push({
-          name: `Legacy: ${folder}`,
-          path: path.join(legacyDir, folder),
+          name: `Legacy: ${folder.name}`,
+          path: path.join(legacyDir, folder.name),
           type: "legacy",
         });
       }
@@ -45,12 +48,14 @@ async function scanForVersions(rootDir: string): Promise<VersionInfo[]> {
   // 2. Scan .versions/feature
   const featureDir = path.join(rootDir, ".versions/feature");
   if (fs.existsSync(featureDir)) {
-    const folders = await glob("*", { cwd: featureDir, onlyDirectories: true });
+    const folders = (
+      await glob("*", { cwd: featureDir, withFileTypes: true })
+    ).filter((dirent) => dirent.isDirectory());
     folders.forEach((folder) => {
-      if (fs.existsSync(path.join(featureDir, folder, "package.json"))) {
+      if (fs.existsSync(path.join(featureDir, folder.name, "package.json"))) {
         versions.push({
-          name: `Feature: ${folder}`,
-          path: path.join(featureDir, folder),
+          name: `Feature: ${folder.name}`,
+          path: path.join(featureDir, folder.name),
           type: "feature",
         });
       }
@@ -111,6 +116,11 @@ async function launchVersion(version: VersionInfo) {
   portfinder.basePort = PREVIEW_PORT_START;
   const port = await portfinder.getPortPromise();
 
+  // Import the lifecycle plugin dynamically to avoid circular deps
+  const { GenAILifecyclePlugin, loadConfig } =
+    await import("../core/engine.js");
+  const config = loadConfig(version.path);
+
   const server = await createServer({
     configFile: path.join(version.path, "vite.config.ts"),
     root: version.path,
@@ -119,12 +129,10 @@ async function launchVersion(version: VersionInfo) {
       strictPort: true,
       open: false,
     },
-    plugins: [
-      GenAIPreviewPlugin(version.path), // Use core plugin
-    ],
+    plugins: [GenAIPreviewPlugin(version.path), GenAILifecyclePlugin()],
     resolve: {
       alias: {
-        "@google/genai": CORE_CONFIG.MOCK_GENAI_PATH, // Use core mock path
+        "@google/genai": CORE_CONFIG.MOCK_GENAI_PATH,
       },
     },
     optimizeDeps: {
@@ -134,7 +142,28 @@ async function launchVersion(version: VersionInfo) {
 
   await server.listen();
   server.printUrls();
-  console.log(chalk.gray(`   (Mock GenAI Active)`));
+
+  // Display AI mode
+  const modeLabel =
+    config.ai.mode === "local"
+      ? `Local AI: ${config.ai.models.text}`
+      : "Mock GenAI";
+  console.log(chalk.gray(`   (${modeLabel} Active)`));
+
+  // Display QR code for mobile access
+  const networkUrl = server.resolvedUrls?.network?.[0];
+  if (networkUrl) {
+    console.log(chalk.cyan("\n  📱 Scan to preview on mobile:"));
+    qrcode.generate(networkUrl, { small: true }, (qr) => {
+      // Indent each line of the QR code to match Vite's URL formatting
+      const indentedQr = qr
+        .split("\n")
+        .map((line) => "     " + line)
+        .join("\n");
+      console.log(indentedQr);
+      console.log(); // Blank line after QR code
+    });
+  }
 
   setTimeout(() => {
     server.openBrowser();

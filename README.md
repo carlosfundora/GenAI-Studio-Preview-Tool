@@ -1,60 +1,60 @@
 # GenAI Studio Preview
 
-**GenAI Studio Preview** is a local UI development tool and IDE extension that allows developers to locally preview the UI environments of applications designed using AI Studio, **without modifying either the app or the local machine.**
+Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SDK, supports local LLMs (Ollama/LFM), and enables mobile testing via QR codes.
 
-## 🚀 Key Features
+## Features
 
-- **Zero-Modification Architecture**: Preview any project without changing its code, configuration, or dependencies. Everything is injected in-memory via Vite's programmable API.
-- **Zero Machine Pollution**: Run cleanly on your machine or utilize the built-in Docker support for absolute environment isolation.
-- **Built-in GenAI Mocks**: Includes a local mock implementation of the `@google/genai` library, allowing you to test UI interactions without API costs or internet connectivity.
-- **Smart Launching**: Automatically scans for Vite-based projects and launches them on dynamically assigned ports.
-- **IDE Ready**: Architected to serve as the foundation for multi-platform IDE extensions.
+- **Zero-Config Preview**: Just run and your AI Studio app works
+- **GenAI SDK Mock**: Full enum support, streaming, tool calls, embeddings
+- **Local AI Support**: Route to Ollama, LFM, or any OpenAI-compatible endpoint
+- **Mobile Testing**: QR code in terminal for instant phone access
+- **IDE Extension**: VS Code sidebar with project discovery
+- **Docker Ready**: CPU/GPU profiles with Ollama backend
 
-## 🛠️ Getting Started
+## Quick Start
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v24 recommended, v18+ required)
-- [pnpm](https://pnpm.io/) (preferred) or npm
-
-### Local Installation
-1. Clone the repository into your projects directory.
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-### Running the Preview
-Execute the launcher from your terminal:
 ```bash
-pnpm run preview
-```
-Follow the interactive prompts to select which versions or prototypes you want to launch.
+# From your AI Studio project
+npx genai-studio-preview
 
-### Docker Usage
-For a consistent environment across Windows and Ubuntu:
+# Or with the VS Code extension
+# Ctrl+Shift+P → "GenAI Studio: Launch Preview"
+```
+
+## Configuration
+
+Create `.genairc.json` in your project:
+
+```json
+{
+  "ai": {
+    "mode": "local",
+    "endpoint": "http://localhost:11434/v1",
+    "models": {
+      "text": "LFM2.5-1.2B-Instruct"
+    }
+  }
+}
+```
+
+## Docker
+
 ```bash
-docker compose up --build
+# CPU-only
+docker-compose --profile cpu up
+
+# With GPU (NVIDIA)
+docker-compose --profile gpu up
 ```
-The preview servers will be accessible on ports `4000-4010`.
 
-## 📂 Project Structure
+## IDE Extension
 
-- `core/`: Shared engine and Vite plugins. Contains the GenAI mocks.
-- `extension/`: Space for future IDE (VS Code, etc.) extension code.
-- `tool/`: The script-based developer tool for local previews.
-- `docker/`: Centralized Docker and Docker Compose assets.
+Install from VSIX or OpenVSX:
 
-## 🧠 How it Works
-GenAI Studio Preview intercepts the build process using the **GenAIPreviewPlugin** (located in `core/`). It programmatically:
-1. Aliases AI-specific libraries (like `@google/genai`) to local mocks.
-2. Strips brittle integrity checks and hardcoded CDN importmaps.
-3. Automatically resolves and injects necessary entry points.
+```bash
+code --install-extension genai-studio-preview-1.0.0.vsix
+```
 
-## 🗺️ Roadmap
-- [ ] **VS Code Extension**: Direct integration into the IDE for seamless prototypying.
-- [ ] **Advanced Mocking**: Support for additional AI framework mocks (OpenAI, LangChain).
-- [ ] **Auto-Discovery**: Improved repository scanning across nested workspaces.
+## License
 
----
-
-*Transforming AI Studio prototypes into stable, local development environments.*
+MIT

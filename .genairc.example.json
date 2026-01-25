@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "GenAI Studio Preview Configuration",
+
+  "scanPaths": [".versions/legacy", ".versions/feature"],
+  "externalProjects": [],
+  "port": 4000,
+
+  "ai": {
+    "mode": "mock",
+    "endpoint": "http://localhost:11434/v1",
+    "models": {
+      "text": "LFM2.5-1.2B-Instruct",
+      "vision": "LFM2.5-VL-1.6B",
+      "audio": "LFM2-Audio-1.5B",
+      "embedding": "nomic-embed-text"
+    },
+    "gpuPassthrough": false,
+    "timeout": 60000
+  },
+
+  "location": {
+    "mode": "passthrough",
+    "mockCoords": {
+      "latitude": 29.9511,
+      "longitude": -90.0715,
+      "accuracy": 10
+    }
+  },
+
+  "autoShutdown": {
+    "enabled": true,
+    "timeoutMs": 30000
+  }
+}
