@@ -12,31 +12,35 @@ const _dirname =
         : path.dirname(fileURLToPath(eval("import.meta.url")));
 
 /**
- * Resolves internal engine paths, handling .ts vs .js based on environment (dev vs dist).
+ * Get the root of the project source (core/) regardless of whether we're running 
+ * from dist/ or source. This is needed because browser-facing files (mocks, shims)
+ * must be TypeScript source files - the compiled JS is CommonJS which doesn't work in browsers.
+ * Vite will transpile the .ts files to ESM on the fly.
  */
-function resolveInternalPath(subPath: string) {
-    const fullPath = path.resolve(_dirname, subPath);
-    // If running from dist/ or the TS file doesn't exist, try the JS counterpart
-    if (
-        fullPath.endsWith(".ts") &&
-        (_dirname.includes("dist") || !fs.existsSync(fullPath))
-    ) {
-        const jsPath = fullPath.replace(/\.ts$/, ".js");
-        if (fs.existsSync(jsPath)) return jsPath;
+function getSourceRoot(): string {
+    // If running from dist/core/, go up to find the actual core/ source
+    if (_dirname.includes("dist")) {
+        // e.g., /path/to/extension/dist/core -> /path/to/core
+        const projectRoot = _dirname.replace(/[/\\]extension[/\\]dist[/\\]core$/, "");
+        return path.join(projectRoot, "core");
     }
-    return fullPath;
+    return _dirname;
 }
+
+const SOURCE_ROOT = getSourceRoot();
 
 /**
  * Shared configuration and path resolution for the GenAI Studio Preview engine.
+ * These paths MUST point to TypeScript source files, not compiled JS, because:
+ * 1. The compiled JS is CommonJS format (not ESM)
+ * 2. Browsers cannot use CommonJS modules
+ * 3. Vite will transpile the .ts files to ESM on the fly
  */
 export const CORE_CONFIG = {
-    MOCK_GENAI_PATH: resolveInternalPath("./mocks/genai.ts"),
-    SHARED_STYLES_PATH: resolveInternalPath(
-        "./assets/shared-module-styles.css",
-    ),
-    GEOLOCATION_SHIM_PATH: resolveInternalPath("./shims/geolocation.ts"),
-    MAPS_SHIM_PATH: resolveInternalPath("./shims/maps.ts"),
+    MOCK_GENAI_PATH: path.resolve(SOURCE_ROOT, "./mocks/genai.ts"),
+    SHARED_STYLES_PATH: path.resolve(SOURCE_ROOT, "./assets/shared-module-styles.css"),
+    GEOLOCATION_SHIM_PATH: path.resolve(SOURCE_ROOT, "./shims/geolocation.ts"),
+    MAPS_SHIM_PATH: path.resolve(SOURCE_ROOT, "./shims/maps.ts"),
 };
 
 /**
