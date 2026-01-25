@@ -11,6 +11,7 @@
   "publisher": "carlosfundora",
   "license": "Polyform-Noncommercial-1.0.0",
   "homepage": "https://github.com/carlosfundora/genai-studio-preview",
+  "readme": "README.md",
   "bugs": {
     "url": "https://github.com/carlosfundora/genai-studio-preview/issues"
   },
