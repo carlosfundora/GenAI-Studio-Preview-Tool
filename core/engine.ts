@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Plugin, ViteDevServer } from "vite";
@@ -17,6 +18,7 @@ export const CORE_CONFIG = {
     "./assets/shared-module-styles.css",
   ),
   GEOLOCATION_SHIM_PATH: path.resolve(__dirname, "./shims/geolocation.ts"),
+  MAPS_SHIM_PATH: path.resolve(__dirname, "./shims/maps.ts"),
 };
 
 /**
@@ -29,7 +31,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
     name: "genai-preview-transform",
     enforce: "pre",
 
-    resolveId(id) {
+    resolveId(id: string) {
       // Polyfill missing shared styles regardless of relative path depth
       if (id.includes("shared-module-styles.css")) {
         return "\0genai-shared-styles";
@@ -41,7 +43,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
       return null;
     },
 
-    load(id) {
+    load(id: string) {
       if (id === "\0genai-shared-styles") {
         if (fs.existsSync(CORE_CONFIG.SHARED_STYLES_PATH)) {
           return fs.readFileSync(CORE_CONFIG.SHARED_STYLES_PATH, "utf-8");
@@ -54,7 +56,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
       return null;
     },
 
-    transform(code, id) {
+    transform(code: string, id: string) {
       if (id.endsWith(".css")) {
         // Polyfill shared-module-styles.css by replacing any relative import with an absolute path to our local copy
         // This handles cases like: @import '../shared-module-styles.css'; or @import '../../shared-module-styles.css';
@@ -68,7 +70,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
       return null;
     },
 
-    transformIndexHtml(html) {
+    transformIndexHtml(html: string) {
       let newHtml = html;
 
       // 1. Remove importmap to force usage of local node_modules
@@ -161,20 +163,26 @@ export function GenAILifecyclePlugin(): Plugin {
       if (!config.autoShutdown.enabled) return;
 
       // Heartbeat endpoint
-      server.middlewares.use("/__genai_heartbeat", (req, res) => {
-        lastHeartbeat = Date.now();
-        hasReceivedFirstHeartbeat = true;
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("ok");
-      });
+      server.middlewares.use(
+        "/__genai_heartbeat",
+        (req: IncomingMessage, res: ServerResponse) => {
+          lastHeartbeat = Date.now();
+          hasReceivedFirstHeartbeat = true;
+          res.writeHead(200, { "Content-Type": "text/plain" });
+          res.end("ok");
+        },
+      );
 
       // Shutdown endpoint (optional manual trigger)
-      server.middlewares.use("/__genai_shutdown", (req, res) => {
-        console.log("\n🛑 Manual shutdown requested...");
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("bye");
-        setTimeout(() => process.exit(0), 500);
-      });
+      server.middlewares.use(
+        "/__genai_shutdown",
+        (req: IncomingMessage, res: ServerResponse) => {
+          console.log("\n🛑 Manual shutdown requested...");
+          res.writeHead(200, { "Content-Type": "text/plain" });
+          res.end("bye");
+          setTimeout(() => process.exit(0), 500);
+        },
+      );
 
       // Check for stale heartbeat (only after first heartbeat received)
       const serverStartTime = Date.now();

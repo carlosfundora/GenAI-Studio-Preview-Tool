@@ -43,6 +43,10 @@ async function startServer() {
             find: "@google/genai",
             replacement: CORE_CONFIG.MOCK_GENAI_PATH,
           },
+          {
+            find: "@googlemaps/js-api-loader",
+            replacement: CORE_CONFIG.MAPS_SHIM_PATH,
+          },
         ],
       },
       optimizeDeps: {

@@ -6,13 +6,13 @@ Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SD
 
 - **Zero-Config Preview**: Just run and your AI Studio app works
 - **Mobile Testing**: **QR Code** in sidebar for instant phone access
-- **4-Panel Sidebar**:
-  - ✨ **Active**: Live previews with QR codes
-  - ⭐ **Favorites**: Pinned projects
-  - 🕒 **Recents**: History
-  - ⚙️ **Config**: Per-project settings (Port, AI Mode, Model)
+- **3-Panel Sidebar**:
+  - ✨ **Active Previews**: Live previews with QR codes
+  - 📁 **Projects**: Favorites + all projects
+  - ⚙️ **Configuration**: Per-project settings (Port, AI Mode, Model)
 - **GenAI SDK Mock**: Full enum support, streaming, tool calls, embeddings
 - **Local AI Support**: Route to Ollama, LFM, or any OpenAI-compatible endpoint
+- **API Shims**: Google Maps → OpenStreetMap/Leaflet, Geolocation mock
 
 ## Quick Start
 
@@ -34,13 +34,19 @@ Create `.genairc.json` in your project:
     "mode": "local",
     "endpoint": "http://localhost:11434/v1",
     "models": {
-      "text": "LFM2.5-1.2B-Instruct"
+      "text": "qwen2.5:1.5b"
     }
+  },
+  "location": {
+    "mode": "mock",
+    "mockCoords": { "latitude": 29.9511, "longitude": -90.0715 }
   }
 }
 ```
 
-## Docker
+## Docker (with AI Backend)
+
+The Docker setup includes an Ollama AI backend that automatically downloads models.
 
 ```bash
 # CPU-only
@@ -50,14 +56,28 @@ docker-compose --profile cpu up
 docker-compose --profile gpu up
 ```
 
+**Services**:
+- `preview-launcher`: Runs the preview server (ports 4000-4010)
+- `ai-backend` / `ai-backend-gpu`: Ollama with `qwen2.5:1.5b` and `nomic-embed-text`
+
 ## IDE Extension
 
 Install from VSIX or OpenVSX:
 
 ```bash
-code --install-extension genai-studio-preview-1.0.0.vsix
+code --install-extension genai-studio-preview-1.1.0.vsix
 ```
+
+## API Shims
+
+The tool automatically shims these APIs for offline preview:
+
+| Original API                | Shimmed To     | Notes                         |
+| --------------------------- | -------------- | ----------------------------- |
+| `@google/genai`             | Mock/Local LLM | Full SDK compatibility        |
+| `@googlemaps/js-api-loader` | Leaflet + OSM  | Map, Marker, LatLng supported |
+| `navigator.geolocation`     | Configurable   | Passthrough, mock, or prompt  |
 
 ## License
 
-MIT
+Polyform Noncommercial 1.0.0

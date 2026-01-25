@@ -14,7 +14,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "moduleResolution": "node",
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "vite": ["../node_modules/vite"]
+    }
   },
   "include": ["src/**/*", "../core/**/*"],
   "exclude": ["node_modules", "dist"]

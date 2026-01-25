@@ -32,9 +32,10 @@
     "onStartupFinished",
     "onView:genai-active",
     "onView:genai-projects",
-    "onView:genai-config"
+    "onView:genai-config",
+    "onCommand:genai-preview.addProject"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/extension/src/extension.js",
   "contributes": {
     "commands": [
       {
