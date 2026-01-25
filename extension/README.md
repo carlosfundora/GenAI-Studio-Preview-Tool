@@ -1,7 +1,7 @@
 # GenAI Studio Preview Tool
 
 <div align="center">
-  <img src="assets/extension-icon.svg" width="128" alt="GenAI Studio Preview Tool Icon" />
+  <img src="assets/extension-icon.png" width="128" alt="GenAI Studio Preview Tool Icon" />
   <h1>GenAI Studio Preview Tool</h1>
   <p><strong>Preview AI Studio prototypes locally. Mock GenAI SDK, local LLMs, and mobile testing.</strong></p>
 
