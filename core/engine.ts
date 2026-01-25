@@ -100,9 +100,14 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
 
       // 4. Inject geolocation config if not passthrough
       if (config.location.mode !== "passthrough") {
+        // Safe stringify to prevent XSS via HTML injection
+        const safeConfig = JSON.stringify({ location: config.location }).replace(
+          /</g,
+          "\\u003c",
+        );
         const geoConfigScript = `
 <script>
-  window.__GENAI_PREVIEW_CONFIG__ = ${JSON.stringify({ location: config.location })};
+  window.__GENAI_PREVIEW_CONFIG__ = ${safeConfig};
 </script>
 <script type="module" src="/@fs${CORE_CONFIG.GEOLOCATION_SHIM_PATH}"></script>`;
         newHtml = newHtml.replace("</head>", `${geoConfigScript}\n</head>`);
