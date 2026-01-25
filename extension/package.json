@@ -4,7 +4,7 @@
   "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
   "version": "1.0.0",
   "publisher": "carlosfundora",
-  "license": "MIT",
+  "license": "Polyform-Noncommercial-1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/carlosfundora/genai-studio-preview"
