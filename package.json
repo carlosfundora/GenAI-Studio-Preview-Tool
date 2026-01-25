@@ -1,6 +1,6 @@
 {
   "name": "genai-studio-preview",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "Local UI development tool and IDE extension for previewing AI Studio applications with zero modifications.",
   "main": "launch-preview.ts",
   "type": "module",

@@ -2,6 +2,12 @@
 
 All notable changes to GenAI Studio Preview Tool will be documented in this file.
 
+## [1.2.1] - 2026-01-25
+
+### Fixes
+- **Extension Icon**: Replaced SVG icon with PNG version to resolve VS Code marketplace compliance warnings.
+- **Module Safety**: Implemented safe `__dirname` polyfill in `core/engine.ts` using `eval("import.meta.url")` to ensure compatibility across CommonJS and ESM environments.
+
 ## [1.2.0] - 2026-01-25
 
 ### Core Engine Integration
