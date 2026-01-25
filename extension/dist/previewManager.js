@@ -151,6 +151,9 @@ class PreviewManager {
         this.previews.clear();
         this.notifyStatusChange();
     }
+    getRunningPreviews() {
+        return Array.from(this.previews.values()).map((p) => p.project);
+    }
 }
 exports.PreviewManager = PreviewManager;
 //# sourceMappingURL=previewManager.js.map

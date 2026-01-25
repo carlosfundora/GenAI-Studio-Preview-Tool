@@ -20,6 +20,7 @@ export declare class PreviewManager {
     launchPreview(project: StoredProject): Promise<void>;
     stopPreview(projectPath: string): Promise<void>;
     stopAllPreviews(): Promise<void>;
+    getRunningPreviews(): StoredProject[];
 }
 export {};
 //# sourceMappingURL=previewManager.d.ts.map

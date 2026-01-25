@@ -1,9 +1,11 @@
 /**
  * GenAI Studio Preview - VS Code Extension
  *
- * Two-panel sidebar design:
- * - Top: Projects list with play/stop buttons
- * - Bottom: Configuration webview for selected project
+ * Four-panel sidebar design:
+ * 1. Active Previews (Webview) - Running URL + QR Code
+ * 2. Favorites (Tree) - Starred projects
+ * 3. Recent Projects (Tree) - Other projects history
+ * 4. Configuration (Webview) - Settings for selection
  */
 import * as vscode from "vscode";
 export declare function activate(context: vscode.ExtensionContext): void;

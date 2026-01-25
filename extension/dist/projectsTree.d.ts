@@ -7,6 +7,8 @@ export interface StoredProject {
     name: string;
     path: string;
     config: ProjectConfig;
+    isFavorite?: boolean;
+    lastUsed?: number;
 }
 export interface ProjectConfig {
     port: number;
@@ -21,7 +23,8 @@ export declare class ProjectItem extends vscode.TreeItem {
     readonly projectPath: string;
     readonly isRunning: boolean;
     readonly config: ProjectConfig;
-    constructor(label: string, projectPath: string, isRunning: boolean, config: ProjectConfig);
+    readonly isFavorite: boolean;
+    constructor(label: string, projectPath: string, isRunning: boolean, config: ProjectConfig, isFavorite: boolean);
 }
 export declare class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem> {
     private _onDidChangeTreeData;
@@ -29,7 +32,8 @@ export declare class ProjectsTreeProvider implements vscode.TreeDataProvider<Pro
     private projects;
     private context;
     private previewManager;
-    constructor(context: vscode.ExtensionContext, previewManager: PreviewManager);
+    private viewType;
+    constructor(context: vscode.ExtensionContext, previewManager: PreviewManager, viewType?: "favorites" | "recents" | "all");
     private loadProjects;
     private saveProjects;
     refresh(): void;
@@ -40,5 +44,7 @@ export declare class ProjectsTreeProvider implements vscode.TreeDataProvider<Pro
     addProject(name: string, projectPath: string): Promise<void>;
     removeProject(projectPath: string): Promise<void>;
     updateProjectConfig(projectPath: string, config: Partial<ProjectConfig>): Promise<void>;
+    toggleFavorite(projectPath: string): Promise<void>;
+    markAsUsed(projectPath: string): Promise<void>;
 }
 //# sourceMappingURL=projectsTree.d.ts.map

@@ -28,7 +28,8 @@
     "react"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:genai-projects"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -59,9 +60,14 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "genai-preview.openInBrowser",
-        "title": "Open in Browser",
-        "icon": "$(globe)"
+        "command": "genai-preview.toggleFavorite",
+        "title": "Toggle Favorite",
+        "icon": "$(star)"
+      },
+      {
+        "command": "genai-preview.showQrCode",
+        "title": "Show QR Code",
+        "icon": "$(device-mobile)"
       }
     ],
     "viewsContainers": {
@@ -76,8 +82,18 @@
     "views": {
       "genai-preview": [
         {
-          "id": "genai-projects",
-          "name": "Projects",
+          "id": "genai-active",
+          "name": "Active Previews",
+          "type": "webview"
+        },
+        {
+          "id": "genai-favorites",
+          "name": "Favorites",
+          "type": "tree"
+        },
+        {
+          "id": "genai-recents",
+          "name": "Recent Projects",
           "type": "tree"
         },
         {
@@ -91,34 +107,34 @@
       "view/title": [
         {
           "command": "genai-preview.addProject",
-          "when": "view == genai-projects",
+          "when": "view == genai-recents",
           "group": "navigation@1"
         },
         {
           "command": "genai-preview.refreshProjects",
-          "when": "view == genai-projects",
+          "when": "view == genai-recents",
           "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
           "command": "genai-preview.launchProject",
-          "when": "view == genai-projects && viewItem == project-stopped",
+          "when": "viewItem == project-stopped",
           "group": "inline@1"
         },
         {
           "command": "genai-preview.stopProject",
-          "when": "view == genai-projects && viewItem == project-running",
+          "when": "viewItem == project-running",
           "group": "inline@1"
         },
         {
-          "command": "genai-preview.openInBrowser",
-          "when": "view == genai-projects && viewItem == project-running",
+          "command": "genai-preview.toggleFavorite",
+          "when": "viewItem =~ /project/",
           "group": "inline@2"
         },
         {
           "command": "genai-preview.removeProject",
-          "when": "view == genai-projects",
+          "when": "view == genai-recents",
           "group": "context"
         }
       ]
@@ -139,10 +155,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "vite": "^6.2.0",
-    "qrcode-terminal": "^0.12.0",
+    "@types/qrcode": "^1.5.6",
     "chalk": "^5.3.0",
     "glob": "^10.0.0",
-    "portfinder": "^1.0.32"
+    "portfinder": "^1.0.32",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "vite": "^6.2.0"
   }
 }

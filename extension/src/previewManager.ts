@@ -164,4 +164,8 @@ export class PreviewManager {
     this.previews.clear();
     this.notifyStatusChange();
   }
+
+  getRunningPreviews(): StoredProject[] {
+    return Array.from(this.previews.values()).map((p) => p.project);
+  }
 }
