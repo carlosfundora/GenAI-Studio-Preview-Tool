@@ -175,12 +175,24 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     let port = 4000;
     while (usedPorts.includes(port)) port++;
 
+    // Load defaults from VS Code settings
+    const globalConfig = vscode.workspace.getConfiguration("genaiPreview");
+
     this.projects.push({
       name,
       path: normalizedPath,
       isFavorite: false,
       lastUsed: Date.now(),
-      config: { ...DEFAULT_CONFIG, port },
+      config: {
+        ...DEFAULT_CONFIG,
+        port,
+        aiMode:
+          globalConfig.get<"mock" | "local">("ai.mode") ||
+          DEFAULT_CONFIG.aiMode,
+        aiEndpoint:
+          globalConfig.get<string>("ai.endpoint") || DEFAULT_CONFIG.aiEndpoint,
+        aiModel: globalConfig.get<string>("ai.model") || DEFAULT_CONFIG.aiModel,
+      },
     });
     await this.saveProjects();
   }

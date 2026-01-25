@@ -81,6 +81,11 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
   }
 
   private getConfigHtml(name: string, config: ProjectConfig): string {
+    const globalConfig = vscode.workspace.getConfiguration("genaiPreview");
+    const defaultMode = globalConfig.get<string>("ai.mode");
+    const defaultEndpoint = globalConfig.get<string>("ai.endpoint");
+    const defaultModel = globalConfig.get<string>("ai.model");
+
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -170,6 +175,16 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
             border-left: 3px solid var(--vscode-textBlockQuote-border);
             border-radius: 2px;
           }
+          .info-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            margin-left: 6px;
+            opacity: 0.8;
+          }
         </style>
       </head>
       <body>
@@ -182,7 +197,7 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
         </div>
 
         <div class="field">
-          <label>AI Mode</label>
+          <label>AI Mode <span class="help-text">(Default: ${defaultMode})</span></label>
           <select id="aiMode">
             <option value="mock" ${config.aiMode === "mock" ? "selected" : ""}>Mock (Simulated)</option>
             <option value="local" ${config.aiMode === "local" ? "selected" : ""}>Local LLM (Ollama/LFM)</option>
@@ -192,11 +207,13 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
         <div id="localOptions" class="local-options" style="display: ${config.aiMode === "local" ? "block" : "none"}">
           <div class="field">
             <label>Ollama Endpoint</label>
-            <input type="text" id="aiEndpoint" value="${config.aiEndpoint}" placeholder="http://localhost:11434/v1">
+            <input type="text" id="aiEndpoint" value="${config.aiEndpoint}" placeholder="${defaultEndpoint}">
+            <div class="help-text">Default: ${defaultEndpoint}</div>
           </div>
           <div class="field">
             <label>Model Name</label>
-            <input type="text" id="aiModel" value="${config.aiModel}" placeholder="LFM2.5-1.2B-Instruct">
+            <input type="text" id="aiModel" value="${config.aiModel}" placeholder="${defaultModel}">
+            <div class="help-text">Default: ${defaultModel}</div>
           </div>
         </div>
 

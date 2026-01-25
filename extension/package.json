@@ -137,6 +137,40 @@
           "group": "context"
         }
       ]
+    },
+    "configuration": {
+      "title": "GenAI Studio Preview",
+      "properties": {
+        "genaiPreview.ai.mode": {
+          "type": "string",
+          "enum": [
+            "mock",
+            "local"
+          ],
+          "default": "mock",
+          "description": "Default AI backend mode for new projects."
+        },
+        "genaiPreview.ai.endpoint": {
+          "type": "string",
+          "default": "http://localhost:11434/v1",
+          "description": "Default API endpoint for local AI (Ollama/LFM/OpenAI-compatible)."
+        },
+        "genaiPreview.ai.model": {
+          "type": "string",
+          "default": "qwen2.5:1.5b",
+          "description": "Default model name to use for text generation."
+        },
+        "genaiPreview.docker.gpuPassthrough": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable GPU passthrough for Docker containers (requires NVIDIA/AMD setup)."
+        },
+        "genaiPreview.server.startPort": {
+          "type": "number",
+          "default": 4000,
+          "description": "Starting port number for project previews."
+        }
+      }
     }
   },
   "scripts": {
