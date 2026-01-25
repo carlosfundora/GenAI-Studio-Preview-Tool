@@ -2,6 +2,20 @@
 
 All notable changes to GenAI Studio Preview Tool will be documented in this file.
 
+## [1.3.0] - 2026-01-25
+
+### Improvements
+
+- **Extension Bundling**: Migrated from plain TypeScript compilation to **esbuild bundling** following VS Code best practices. This reduces the extension size, improves load time, and enables compatibility with VS Code Web (github.dev, vscode.dev).
+- **Minified Production Build**: Extension code is now minified in production builds.
+- **Faster Activation**: Single bundled file loads significantly faster than multiple individual files.
+
+## [1.2.2] - 2026-01-25
+
+### Fixes
+
+- **Black Screen Bug**: Fixed critical issue where the preview would display a black screen instead of the app. The root cause was a CJS/ESM module mismatch—browser-facing mocks were being resolved to CommonJS-compiled `.js` files, but browsers require ESM. Now correctly resolves to TypeScript source files which Vite transpiles to ESM on the fly.
+
 ## [1.2.1] - 2026-01-25
 
 ### Fixes

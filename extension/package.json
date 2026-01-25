@@ -1,218 +1,222 @@
 {
-  "name": "genai-studio-preview",
-  "displayName": "GenAI Studio Preview Tool",
-  "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
-  "version": "1.2.1",
-  "type": "commonjs",
-  "icon": "assets/extension-icon.png",
-  "galleryBanner": {
-    "color": "#2b2d3e",
-    "theme": "dark"
-  },
-  "publisher": "carlosfundora",
-  "license": "Polyform-Noncommercial-1.0.0",
-  "homepage": "https://github.com/carlosfundora/genai-studio-preview",
-  "readme": "README.md",
-  "bugs": {
-    "url": "https://github.com/carlosfundora/genai-studio-preview/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/carlosfundora/genai-studio-preview"
-  },
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Testing",
-    "Visualization",
-    "Machine Learning",
-    "Programming Languages"
-  ],
-  "keywords": [
-    "ai-studio",
-    "gemini",
-    "google",
-    "genai",
-    "preview",
-    "mock",
-    "vite",
-    "react"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./dist/extension/src/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "genai-preview.launchProject",
-        "title": "Launch Preview",
-        "icon": "$(play)"
-      },
-      {
-        "command": "genai-preview.stopProject",
-        "title": "Stop",
-        "icon": "$(debug-stop)"
-      },
-      {
-        "command": "genai-preview.addProject",
-        "title": "Add Project",
-        "icon": "$(add)"
-      },
-      {
-        "command": "genai-preview.removeProject",
-        "title": "Remove Project",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "genai-preview.refreshProjects",
-        "title": "Refresh",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "genai-preview.toggleFavorite",
-        "title": "Toggle Favorite",
-        "icon": "$(star)"
-      },
-      {
-        "command": "genai-preview.showQrCode",
-        "title": "Show QR Code",
-        "icon": "$(device-mobile)"
-      },
-      {
-        "command": "genai-preview.openSettings",
-        "title": "Settings",
-        "icon": "$(gear)"
-      }
+    "name": "genai-studio-preview",
+    "displayName": "GenAI Studio Preview Tool",
+    "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
+    "version": "1.3.0",
+    "type": "commonjs",
+    "icon": "assets/extension-icon.png",
+    "galleryBanner": {
+        "color": "#2b2d3e",
+        "theme": "dark"
+    },
+    "publisher": "carlosfundora",
+    "license": "Polyform-Noncommercial-1.0.0",
+    "homepage": "https://github.com/carlosfundora/genai-studio-preview",
+    "readme": "README.md",
+    "bugs": {
+        "url": "https://github.com/carlosfundora/genai-studio-preview/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/carlosfundora/genai-studio-preview"
+    },
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Testing",
+        "Visualization",
+        "Machine Learning",
+        "Programming Languages"
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "genai-preview",
-          "title": "GenAI Studio Preview Tool",
-          "icon": "$(mirror)"
+    "keywords": [
+        "ai-studio",
+        "gemini",
+        "google",
+        "genai",
+        "preview",
+        "mock",
+        "vite",
+        "react"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "genai-preview.launchProject",
+                "title": "Launch Preview",
+                "icon": "$(play)"
+            },
+            {
+                "command": "genai-preview.stopProject",
+                "title": "Stop",
+                "icon": "$(debug-stop)"
+            },
+            {
+                "command": "genai-preview.addProject",
+                "title": "Add Project",
+                "icon": "$(add)"
+            },
+            {
+                "command": "genai-preview.removeProject",
+                "title": "Remove Project",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "genai-preview.refreshProjects",
+                "title": "Refresh",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "genai-preview.toggleFavorite",
+                "title": "Toggle Favorite",
+                "icon": "$(star)"
+            },
+            {
+                "command": "genai-preview.showQrCode",
+                "title": "Show QR Code",
+                "icon": "$(device-mobile)"
+            },
+            {
+                "command": "genai-preview.openSettings",
+                "title": "Settings",
+                "icon": "$(gear)"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "genai-preview",
+                    "title": "GenAI Studio Preview Tool",
+                    "icon": "$(mirror)"
+                }
+            ]
+        },
+        "views": {
+            "genai-preview": [
+                {
+                    "id": "genai-active",
+                    "name": "Active Previews",
+                    "type": "webview",
+                    "icon": "$(pulse)"
+                },
+                {
+                    "id": "genai-projects",
+                    "name": "Projects",
+                    "type": "tree",
+                    "icon": "$(list-unordered)"
+                },
+                {
+                    "id": "genai-config",
+                    "name": "Configuration",
+                    "type": "webview",
+                    "icon": "$(gear)"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "genai-preview.addProject",
+                    "when": "view == genai-projects",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "genai-preview.refreshProjects",
+                    "when": "view == genai-projects",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "genai-preview.openSettings",
+                    "when": "view == genai-projects",
+                    "group": "navigation@3"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "genai-preview.launchProject",
+                    "when": "viewItem == project-stopped || viewItem == project-stopped-favorite",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "genai-preview.stopProject",
+                    "when": "viewItem == project-running || viewItem == project-running-favorite",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "genai-preview.toggleFavorite",
+                    "when": "viewItem =~ /project/",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "genai-preview.removeProject",
+                    "when": "view == genai-projects",
+                    "group": "context"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "GenAI Studio Preview Tool",
+            "properties": {
+                "genaiPreview.AI.Mode": {
+                    "type": "string",
+                    "enum": [
+                        "mock",
+                        "local"
+                    ],
+                    "default": "mock",
+                    "description": "Default AI backend mode for new projects."
+                },
+                "genaiPreview.AI.Endpoint": {
+                    "type": "string",
+                    "default": "http://localhost:11434/v1",
+                    "description": "Default API endpoint for local AI (e.g., Ollama at http://localhost:11434/v1 or LFM at http://localhost:8080/v1)."
+                },
+                "genaiPreview.AI.Model": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Default model name for text generation (e.g., 'llama3', 'qwen2.5:1.5b'). Leave empty to configure per-project."
+                },
+                "genaiPreview.Docker.GPUPassthrough": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable GPU passthrough for Docker containers (requires NVIDIA/AMD setup)."
+                },
+                "genaiPreview.Server.StartPort": {
+                    "type": "number",
+                    "default": 4000,
+                    "description": "Starting port number for project previews (defaults to 4000 if not specified)."
+                }
+            }
         }
-      ]
     },
-    "views": {
-      "genai-preview": [
-        {
-          "id": "genai-active",
-          "name": "Active Previews",
-          "type": "webview",
-          "icon": "$(pulse)"
-        },
-        {
-          "id": "genai-projects",
-          "name": "Projects",
-          "type": "tree",
-          "icon": "$(list-unordered)"
-        },
-        {
-          "id": "genai-config",
-          "name": "Configuration",
-          "type": "webview",
-          "icon": "$(gear)"
-        }
-      ]
+    "scripts": {
+        "vscode:prepublish": "npm run package:production",
+        "compile": "node esbuild.js",
+        "compile:production": "node esbuild.js --production",
+        "watch": "node esbuild.js --watch",
+        "package:production": "npm run compile:production",
+        "typecheck": "tsc -p ./tsconfig.extension.json --noEmit",
+        "test": "vitest",
+        "package": "vsce package",
+        "publish:openvsx": "ovsx publish"
     },
-    "menus": {
-      "view/title": [
-        {
-          "command": "genai-preview.addProject",
-          "when": "view == genai-projects",
-          "group": "navigation@1"
-        },
-        {
-          "command": "genai-preview.refreshProjects",
-          "when": "view == genai-projects",
-          "group": "navigation@2"
-        },
-        {
-          "command": "genai-preview.openSettings",
-           "when": "view == genai-projects",
-           "group": "navigation@3"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "genai-preview.launchProject",
-          "when": "viewItem == project-stopped || viewItem == project-stopped-favorite",
-          "group": "inline@1"
-        },
-        {
-          "command": "genai-preview.stopProject",
-          "when": "viewItem == project-running || viewItem == project-running-favorite",
-          "group": "inline@1"
-        },
-        {
-          "command": "genai-preview.toggleFavorite",
-          "when": "viewItem =~ /project/",
-          "group": "inline@2"
-        },
-        {
-          "command": "genai-preview.removeProject",
-          "when": "view == genai-projects",
-          "group": "context"
-        }
-      ]
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/qrcode": "^1.5.6",
+        "@types/vscode": "^1.85.0",
+        "@vscode/vsce": "^3.7.1",
+        "esbuild": "^0.27.2",
+        "ovsx": "^0.8.3",
+        "typescript": "^5.0.0",
+        "vitest": "^4.0.18"
     },
-    "configuration": {
-      "title": "GenAI Studio Preview Tool",
-      "properties": {
-        "genaiPreview.AI.Mode": {
-          "type": "string",
-          "enum": [
-            "mock",
-            "local"
-          ],
-          "default": "mock",
-          "description": "Default AI backend mode for new projects."
-        },
-        "genaiPreview.AI.Endpoint": {
-          "type": "string",
-          "default": "http://localhost:11434/v1",
-          "description": "Default API endpoint for local AI (e.g., Ollama at http://localhost:11434/v1 or LFM at http://localhost:8080/v1)."
-        },
-        "genaiPreview.AI.Model": {
-          "type": "string",
-          "default": "",
-          "description": "Default model name for text generation (e.g., 'llama3', 'qwen2.5:1.5b'). Leave empty to configure per-project."
-        },
-        "genaiPreview.Docker.GPUPassthrough": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable GPU passthrough for Docker containers (requires NVIDIA/AMD setup)."
-        },
-        "genaiPreview.Server.StartPort": {
-          "type": "number",
-          "default": 4000,
-          "description": "Starting port number for project previews (defaults to 4000 if not specified)."
-        }
-      }
+    "dependencies": {
+        "portfinder": "^1.0.32",
+        "qrcode": "^1.5.4",
+        "vite": "^6.2.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./tsconfig.extension.json",
-    "watch": "tsc -watch -p ./tsconfig.extension.json",
-    "test": "vitest",
-    "package": "vsce package",
-    "publish:openvsx": "ovsx publish"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/qrcode": "^1.5.6",
-    "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "^2.22.0",
-    "ovsx": "^0.8.3",
-    "typescript": "^5.0.0",
-    "vitest": "^4.0.18"
-  },
-  "dependencies": {
-    "portfinder": "^1.0.32",
-    "qrcode": "^1.5.4",
-    "vite": "^6.2.0"
-  }
 }

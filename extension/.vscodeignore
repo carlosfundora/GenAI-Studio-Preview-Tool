@@ -1,12 +1,32 @@
+# VS Code and test files
 .vscode/**
 .vscode-test/**
+
+# Source files (bundled into dist/)
 src/**
-node_modules/**
-*.map
-*.ts
-!*.d.ts
+
+# Build config files
 tsconfig.json
 tsconfig.extension.json
+esbuild.js
+vitest.config.ts
+
+# Development files
 .gitignore
 .eslintrc.*
 **/*.test.ts
+
+# Dependencies (not needed - vite is external)
+node_modules/**
+
+# Source maps (not needed in production)
+**/*.map
+
+# Old build artifacts from tsc
+dist/extension/**
+
+# Package files (don't include old versions)
+*.vsix
+
+# Tests
+tests/**

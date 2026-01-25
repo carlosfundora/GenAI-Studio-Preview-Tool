@@ -12,22 +12,27 @@ const _dirname =
         : path.dirname(fileURLToPath(eval("import.meta.url")));
 
 /**
- * Get the root of the project source (core/) regardless of whether we're running 
- * from dist/ or source. This is needed because browser-facing files (mocks, shims)
- * must be TypeScript source files - the compiled JS is CommonJS which doesn't work in browsers.
- * Vite will transpile the .ts files to ESM on the fly.
+ * Get the root of the core files (mocks, shims) regardless of whether we're running 
+ * from source or from a bundled extension.
+ * 
+ * When bundled: server-entry.js is in extension/dist/, core files are in extension/dist/core/
+ * When source:  engine.ts is in core/, core files are in core/
+ * 
+ * Vite will transpile the .ts files to ESM on the fly for browser use.
  */
-function getSourceRoot(): string {
-    // If running from dist/core/, go up to find the actual core/ source
-    if (_dirname.includes("dist")) {
-        // e.g., /path/to/extension/dist/core -> /path/to/core
-        const projectRoot = _dirname.replace(/[/\\]extension[/\\]dist[/\\]core$/, "");
-        return path.join(projectRoot, "core");
+function getCoreRoot(): string {
+    // When bundled, _dirname points to extension/dist (where server-entry.js is)
+    // Core files are copied to extension/dist/core/ during build
+    const bundledCorePath = path.join(_dirname, "core");
+    if (fs.existsSync(bundledCorePath) && fs.existsSync(path.join(bundledCorePath, "mocks"))) {
+        return bundledCorePath;
     }
+    
+    // Fallback: running from source, _dirname is core/
     return _dirname;
 }
 
-const SOURCE_ROOT = getSourceRoot();
+const CORE_ROOT = getCoreRoot();
 
 /**
  * Shared configuration and path resolution for the GenAI Studio Preview engine.
@@ -37,10 +42,10 @@ const SOURCE_ROOT = getSourceRoot();
  * 3. Vite will transpile the .ts files to ESM on the fly
  */
 export const CORE_CONFIG = {
-    MOCK_GENAI_PATH: path.resolve(SOURCE_ROOT, "./mocks/genai.ts"),
-    SHARED_STYLES_PATH: path.resolve(SOURCE_ROOT, "./assets/shared-module-styles.css"),
-    GEOLOCATION_SHIM_PATH: path.resolve(SOURCE_ROOT, "./shims/geolocation.ts"),
-    MAPS_SHIM_PATH: path.resolve(SOURCE_ROOT, "./shims/maps.ts"),
+    MOCK_GENAI_PATH: path.resolve(CORE_ROOT, "./mocks/genai.ts"),
+    SHARED_STYLES_PATH: path.resolve(CORE_ROOT, "./assets/shared-module-styles.css"),
+    GEOLOCATION_SHIM_PATH: path.resolve(CORE_ROOT, "./shims/geolocation.ts"),
+    MAPS_SHIM_PATH: path.resolve(CORE_ROOT, "./shims/maps.ts"),
 };
 
 /**

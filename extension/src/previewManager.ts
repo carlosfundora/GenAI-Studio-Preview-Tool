@@ -91,8 +91,6 @@ export class PreviewManager {
       const serverEntry = path.join(
         this.context.extensionPath,
         "dist",
-        "extension",
-        "src",
         "server-entry.js",
       );
 
