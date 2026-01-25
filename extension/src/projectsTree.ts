@@ -2,6 +2,8 @@
  * Projects Tree Provider - Shows list of AI Studio projects with play/stop buttons
  */
 
+import * as path from "path";
+import * as os from "os";
 import * as vscode from "vscode";
 import { PreviewManager } from "./previewManager";
 
@@ -131,8 +133,11 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
 
   async addProject(name: string, projectPath: string): Promise<void> {
     // 1. Security: Validate path is absolute and doesn't contain traversal
-    const normalizedPath = require("path").normalize(projectPath);
+    const normalizedPath = path.normalize(projectPath);
+    console.log(`[GenAI] Adding project: ${projectPath} -> ${normalizedPath}`);
+
     if (normalizedPath !== projectPath || projectPath.includes("..")) {
+      console.error(`[GenAI] Invalid path traversal detected: ${projectPath}`);
       vscode.window.showErrorMessage(
         "Invalid project path: Path contains unsafe characters.",
       );
@@ -140,15 +145,19 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     }
 
     // 2. Security: Ensure path is within user workspace or home directory
-    const homedir = require("os").homedir();
+    const homedir = os.homedir();
     const workspaceFolders =
       vscode.workspace.workspaceFolders?.map((f) => f.uri.fsPath) || [];
     const allowedRoots = [homedir, ...workspaceFolders];
+
+    console.log(`[GenAI] Allowed roots: ${allowedRoots.join(", ")}`);
+    console.log(`[GenAI] Checking if matches: ${normalizedPath}`);
 
     const isAllowed = allowedRoots.some((root) =>
       normalizedPath.startsWith(root),
     );
     if (!isAllowed) {
+      console.error(`[GenAI] Path denied: ${normalizedPath} not in allowed roots.`);
       vscode.window.showErrorMessage(
         "Invalid project path: Path must be within your home directory or workspace.",
       );
@@ -159,7 +168,9 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     const packageJsonPath = vscode.Uri.file(normalizedPath + "/package.json");
     try {
       await vscode.workspace.fs.stat(packageJsonPath);
+      console.log(`[GenAI] Found package.json at ${packageJsonPath.fsPath}`);
     } catch {
+      console.error(`[GenAI] No package.json found at ${packageJsonPath.fsPath}`);
       vscode.window.showErrorMessage(
         "Invalid project: No package.json found in the selected folder.",
       );
@@ -175,6 +186,8 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     let port = 4000;
     while (usedPorts.includes(port)) port++;
 
+    console.log(`[GenAI] Assigned port ${port} for ${name}`);
+
     // Load defaults from VS Code settings
     const globalConfig = vscode.workspace.getConfiguration("genaiPreview");
 
@@ -187,14 +200,15 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
         ...DEFAULT_CONFIG,
         port,
         aiMode:
-          globalConfig.get<"mock" | "local">("ai.mode") ||
+          globalConfig.get<"mock" | "local">("AI.Mode") ||
           DEFAULT_CONFIG.aiMode,
         aiEndpoint:
-          globalConfig.get<string>("ai.endpoint") || DEFAULT_CONFIG.aiEndpoint,
-        aiModel: globalConfig.get<string>("ai.model") || DEFAULT_CONFIG.aiModel,
+          globalConfig.get<string>("AI.Endpoint") || DEFAULT_CONFIG.aiEndpoint,
+        aiModel: globalConfig.get<string>("AI.Model") || DEFAULT_CONFIG.aiModel,
       },
     });
     await this.saveProjects();
+    console.log(`[GenAI] Project saved. Total projects: ${this.projects.length}`);
   }
 
   async removeProject(projectPath: string): Promise<void> {

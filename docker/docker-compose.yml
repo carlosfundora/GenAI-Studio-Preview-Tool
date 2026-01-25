@@ -8,103 +8,103 @@
 # Models are automatically downloaded on first run.
 
 services:
-  # === Preview Launcher ===
-  preview-launcher:
-    build: .
-    image: genai-studio-preview
-    container_name: genai-studio-preview
-    volumes:
-      - ../../../:/app/Projects
-    working_dir: /app/Projects/.extensions/genai-studio-preview
-    ports:
-      - "4000-4010:4000-4010"
-    environment:
-      - NODE_ENV=development
-      - GENAI_MODE=local
-      - GENAI_ENDPOINT=http://ai-backend:11434/v1
-      - GENAI_MODEL=qwen2.5:1.5b
-    stdin_open: true
-    tty: true
-    command: pnpm run preview
-    depends_on:
-      ai-backend:
-        condition: service_started
-    networks:
-      - genai-preview-net
-    profiles:
-      - cpu
-      - gpu
+    # === Preview Launcher ===
+    preview-launcher:
+        build: .
+        image: genai-studio-preview
+        container_name: genai-studio-preview
+        volumes:
+            - ../../:/app/Projects
+        working_dir: /app/Projects/GenAI-Studio-Preview-Tool
+        ports:
+            - "4000-4010:4000-4010"
+        environment:
+            - NODE_ENV=development
+            - GENAI_MODE=local
+            - GENAI_ENDPOINT=http://ai-backend:11434/v1
+            - GENAI_MODEL=qwen2.5:1.5b
+        stdin_open: true
+        tty: true
+        command: pnpm run preview
+        depends_on:
+            ai-backend:
+                condition: service_started
+        networks:
+            - genai-preview-net
+        profiles:
+            - cpu
+            - gpu
 
-  # === AI Backend (CPU) ===
-  ai-backend:
-    image: ollama/ollama:latest
-    container_name: genai-ai-backend
-    volumes:
-      - ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    entrypoint: >
-      sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
-    networks:
-      - genai-preview-net
-    profiles:
-      - cpu
+    # === AI Backend (CPU) ===
+    ai-backend:
+        image: ollama/ollama:latest
+        container_name: genai-ai-backend
+        volumes:
+            - ollama-models:/root/.ollama
+        ports:
+            - "11434:11434"
+        environment:
+            - OLLAMA_HOST=0.0.0.0
+        entrypoint: >
+            sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
+        networks:
+            - genai-preview-net
+        profiles:
+            - cpu
 
-  # === AI Backend (GPU - NVIDIA) ===
-  ai-backend-gpu:
-    image: ollama/ollama:latest
-    container_name: genai-ai-backend-gpu
-    volumes:
-      - ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    entrypoint: >
-      sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    networks:
-      - genai-preview-net
-    profiles:
-      - gpu
+    # === AI Backend (GPU - NVIDIA) ===
+    ai-backend-gpu:
+        image: ollama/ollama:latest
+        container_name: genai-ai-backend-gpu
+        volumes:
+            - ollama-models:/root/.ollama
+        ports:
+            - "11434:11434"
+        environment:
+            - OLLAMA_HOST=0.0.0.0
+        entrypoint: >
+            sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+        networks:
+            - genai-preview-net
+        profiles:
+            - gpu
 
-  # === AI Backend (GPU - AMD ROCm) ===
-  # For AMD GPUs like RX 6700 XT, RX 7000 series, etc.
-  ai-backend-amd:
-    image: ollama/ollama:rocm
-    container_name: genai-ai-backend-amd
-    volumes:
-      - ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - HSA_OVERRIDE_GFX_VERSION=10.3.0 # RX 6700 XT = gfx1031, use 10.3.0
-    devices:
-      - /dev/kfd
-      - /dev/dri
-    group_add:
-      - video
-      - render
-    entrypoint: >
-      sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
-    networks:
-      - genai-preview-net
-    profiles:
-      - amd
+    # === AI Backend (GPU - AMD ROCm) ===
+    # For AMD GPUs like RX 6700 XT, RX 7000 series, etc.
+    ai-backend-amd:
+        image: ollama/ollama:rocm
+        container_name: genai-ai-backend-amd
+        volumes:
+            - ollama-models:/root/.ollama
+        ports:
+            - "11434:11434"
+        environment:
+            - OLLAMA_HOST=0.0.0.0
+            - HSA_OVERRIDE_GFX_VERSION=10.3.0 # RX 6700 XT = gfx1031, use 10.3.0
+        devices:
+            - /dev/kfd
+            - /dev/dri
+        group_add:
+            - video
+            - render
+        entrypoint: >
+            sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
+        networks:
+            - genai-preview-net
+        profiles:
+            - amd
 
 networks:
-  genai-preview-net:
-    driver: bridge
+    genai-preview-net:
+        driver: bridge
 
 volumes:
-  ollama-models:
-    name: genai-ollama-models
+    ollama-models:
+        name: genai-ollama-models

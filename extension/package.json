@@ -141,7 +141,7 @@
     "configuration": {
       "title": "GenAI Studio Preview",
       "properties": {
-        "genaiPreview.ai.mode": {
+        "genaiPreview.AI.Mode": {
           "type": "string",
           "enum": [
             "mock",
@@ -150,25 +150,25 @@
           "default": "mock",
           "description": "Default AI backend mode for new projects."
         },
-        "genaiPreview.ai.endpoint": {
+        "genaiPreview.AI.Endpoint": {
           "type": "string",
           "default": "http://localhost:11434/v1",
-          "description": "Default API endpoint for local AI (Ollama/LFM/OpenAI-compatible)."
+          "description": "Default API endpoint for local AI (e.g., Ollama at http://localhost:11434/v1 or LFM at http://localhost:8080/v1)."
         },
-        "genaiPreview.ai.model": {
+        "genaiPreview.AI.Model": {
           "type": "string",
-          "default": "qwen2.5:1.5b",
-          "description": "Default model name to use for text generation."
+          "default": "",
+          "description": "Default model name for text generation (e.g., 'llama3', 'qwen2.5:1.5b'). Leave empty to configure per-project."
         },
-        "genaiPreview.docker.gpuPassthrough": {
+        "genaiPreview.Docker.GPUPassthrough": {
           "type": "boolean",
           "default": false,
           "description": "Enable GPU passthrough for Docker containers (requires NVIDIA/AMD setup)."
         },
-        "genaiPreview.server.startPort": {
+        "genaiPreview.Server.StartPort": {
           "type": "number",
           "default": 4000,
-          "description": "Starting port number for project previews."
+          "description": "Starting port number for project previews (defaults to 4000 if not specified)."
         }
       }
     }

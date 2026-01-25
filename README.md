@@ -15,18 +15,40 @@ Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SD
 - **API Shims**: Google Maps → OpenStreetMap/Leaflet, Geolocation mock
 
 ## Quick Start
+### 1. Configure the Extension
+Go to **Settings** (`Ctrl+,`) and search for `GenAI`. Configure your local AI backend:
+- **AI > Endpoint**: The URL of your local inference server (e.g., `http://localhost:11434/v1` for Ollama).
+- **AI > Mode**: Set to `local` if you want to use the inference server by default.
 
+### 2. Launch a Preview
 ```bash
 # From your AI Studio project
 npx genai-studio-preview
 
 # Or with the VS Code extension
-# Ctrl+Shift+P → "GenAI Studio: Launch Preview"
+# Ctrl+Shift+P → "GenAI Studio: Add Project"
 ```
+
+## Configuring Local AI Backend
+
+To use a local LLM (like Llama 3 or Qwen 2.5) instead of the mock backend:
+
+1.  **Install Ollama**: [https://ollama.com](https://ollama.com)
+2.  **Pull a Model**:
+    ```bash
+    ollama pull qwen2.5:1.5b
+    ```
+3.  **Configure Extension**:
+    - Set `Genai Preview > AI: Endpoint` to `http://localhost:11434/v1`
+    - Set `Genai Preview > AI: Model` to `qwen2.5:1.5b`
+4.  **Verify**:
+    - Launch a project.
+    - Change "AI Mode" to **Local** in the configuration panel.
+    - Generate text in your app. It should now stream from Ollama.
 
 ## Configuration
 
-Create `.genairc.json` in your project:
+Create `.genairc.json` in your project for per-project overrides:
 
 ```json
 {

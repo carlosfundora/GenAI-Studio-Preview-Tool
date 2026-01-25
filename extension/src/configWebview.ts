@@ -82,9 +82,9 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
 
   private getConfigHtml(name: string, config: ProjectConfig): string {
     const globalConfig = vscode.workspace.getConfiguration("genaiPreview");
-    const defaultMode = globalConfig.get<string>("ai.mode");
-    const defaultEndpoint = globalConfig.get<string>("ai.endpoint");
-    const defaultModel = globalConfig.get<string>("ai.model");
+    const defaultMode = globalConfig.get<string>("AI.Mode");
+    const defaultEndpoint = globalConfig.get<string>("AI.Endpoint");
+    const defaultModel = globalConfig.get<string>("AI.Model");
     const nonce = this.getNonce();
 
     return `
