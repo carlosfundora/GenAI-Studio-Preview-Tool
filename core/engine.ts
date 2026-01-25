@@ -12,22 +12,25 @@ const _dirname =
         : path.dirname(fileURLToPath(eval("import.meta.url")));
 
 /**
- * Get the root of the core files (mocks, shims) regardless of whether we're running 
+ * Get the root of the core files (mocks, shims) regardless of whether we're running
  * from source or from a bundled extension.
- * 
+ *
  * When bundled: server-entry.js is in extension/dist/, core files are in extension/dist/core/
  * When source:  engine.ts is in core/, core files are in core/
- * 
+ *
  * Vite will transpile the .ts files to ESM on the fly for browser use.
  */
 function getCoreRoot(): string {
     // When bundled, _dirname points to extension/dist (where server-entry.js is)
     // Core files are copied to extension/dist/core/ during build
     const bundledCorePath = path.join(_dirname, "core");
-    if (fs.existsSync(bundledCorePath) && fs.existsSync(path.join(bundledCorePath, "mocks"))) {
+    if (
+        fs.existsSync(bundledCorePath) &&
+        fs.existsSync(path.join(bundledCorePath, "mocks"))
+    ) {
         return bundledCorePath;
     }
-    
+
     // Fallback: running from source, _dirname is core/
     return _dirname;
 }
@@ -43,7 +46,10 @@ const CORE_ROOT = getCoreRoot();
  */
 export const CORE_CONFIG = {
     MOCK_GENAI_PATH: path.resolve(CORE_ROOT, "./mocks/genai.ts"),
-    SHARED_STYLES_PATH: path.resolve(CORE_ROOT, "./assets/shared-module-styles.css"),
+    SHARED_STYLES_PATH: path.resolve(
+        CORE_ROOT,
+        "./assets/shared-module-styles.css",
+    ),
     GEOLOCATION_SHIM_PATH: path.resolve(CORE_ROOT, "./shims/geolocation.ts"),
     MAPS_SHIM_PATH: path.resolve(CORE_ROOT, "./shims/maps.ts"),
 };
@@ -53,12 +59,14 @@ export const CORE_CONFIG = {
  */
 export function GenAIPreviewPlugin(projectPath: string): Plugin {
     const config = loadConfig(projectPath);
+    // Track CSS files we've stubbed to avoid repeated filesystem checks
+    const stubbedCssFiles = new Set<string>();
 
     return {
         name: "genai-preview-transform",
         enforce: "pre",
 
-        resolveId(id: string) {
+        resolveId(id: string, importer?: string) {
             // Polyfill missing shared styles regardless of relative path depth
             if (id.includes("shared-module-styles.css")) {
                 return "\0genai-shared-styles";
@@ -67,6 +75,22 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             if (id === "virtual:genai-preview-config") {
                 return "\0genai-preview-config";
             }
+
+            // Handle missing CSS files - AI Studio doesn't require CSS files to exist
+            if (id.endsWith(".css") && importer) {
+                // Resolve the absolute path
+                const importerDir = path.dirname(importer);
+                const absolutePath = path.resolve(importerDir, id);
+
+                // If CSS file doesn't exist, stub it
+                if (!fs.existsSync(absolutePath)) {
+                    const virtualId = `\0genai-css-stub:${absolutePath}`;
+                    stubbedCssFiles.add(virtualId);
+                    console.log(`[GenAI Preview] Stubbing missing CSS: ${id}`);
+                    return virtualId;
+                }
+            }
+
             return null;
         },
 
@@ -83,16 +107,23 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             if (id === "\0genai-preview-config") {
                 return `export default ${JSON.stringify(config)};`;
             }
+
+            // Return empty CSS for stubbed files
+            if (id.startsWith("\0genai-css-stub:")) {
+                const originalPath = id.replace("\0genai-css-stub:", "");
+                return `/* GenAI Studio Preview: CSS stub for missing file */\n/* Original: ${path.basename(originalPath)} */`;
+            }
+
             return null;
         },
 
         transform(code: string, id: string) {
             if (id.endsWith(".css")) {
-                // Polyfill shared-module-styles.css by replacing any relative import with an absolute path to our local copy
-                // This handles cases like: @import '../shared-module-styles.css'; or @import '../../shared-module-styles.css';
+                // Only replace shared-module-styles.css import paths with our local copy
+                // This is safe and doesn't affect other CSS content
                 if (code.includes("shared-module-styles.css")) {
                     return code.replace(
-                        /@import\s+(url\(['"]?)?(\.\/*)+shared-module-styles\.css(['"]?\))?;?/g,
+                        /@import\s+(url\(['\"]?)?(\.\.\/)+(modules\/)?shared-module-styles\.css(['\"]?\))?;?/g,
                         `@import "${CORE_CONFIG.SHARED_STYLES_PATH}";`,
                     );
                 }
@@ -163,23 +194,23 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             let entryPoint = config.entryPoint || "";
 
             if (!entryPoint) {
-              const possibleEntries = [
-                  "index.tsx",
-                  "src/main.tsx",
-                  "src/index.tsx",
-                  "main.tsx",
-              ];
-              for (const entry of possibleEntries) {
-                  if (fs.existsSync(path.join(projectPath, entry))) {
-                      entryPoint = "/" + entry;
-                      break;
-                  }
-              }
+                const possibleEntries = [
+                    "index.tsx",
+                    "src/main.tsx",
+                    "src/index.tsx",
+                    "main.tsx",
+                ];
+                for (const entry of possibleEntries) {
+                    if (fs.existsSync(path.join(projectPath, entry))) {
+                        entryPoint = "/" + entry;
+                        break;
+                    }
+                }
             } else {
-              // Ensure entryPoint starts with /
-              if (!entryPoint.startsWith("/")) {
-                entryPoint = "/" + entryPoint;
-              }
+                // Ensure entryPoint starts with /
+                if (!entryPoint.startsWith("/")) {
+                    entryPoint = "/" + entryPoint;
+                }
             }
 
             if (entryPoint && !newHtml.includes(entryPoint)) {

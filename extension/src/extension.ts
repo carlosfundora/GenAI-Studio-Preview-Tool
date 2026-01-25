@@ -145,10 +145,29 @@ export function activate(context: vscode.ExtensionContext) {
                         const projectPath = folderUri[0].fsPath;
                         log(`Selected folder: ${projectPath}`);
 
+                        const defaultName =
+                            projectPath.split("/").pop() || "My Project";
+                        log(
+                            `Showing input box with default name: ${defaultName}`,
+                        );
+
                         const projectName = await vscode.window.showInputBox({
-                            prompt: "Project Name",
-                            value: projectPath.split("/").pop() || "My Project",
+                            prompt: "Enter a name for this project",
+                            placeHolder: "Project Name",
+                            value: defaultName,
+                            ignoreFocusOut: true, // Keep input box open even if user clicks elsewhere
+                            validateInput: (value) => {
+                                if (!value || value.trim().length === 0) {
+                                    return "Project name cannot be empty";
+                                }
+                                return null;
+                            },
                         });
+
+                        log(
+                            `Input box returned: ${projectName === undefined ? "undefined (cancelled)" : `"${projectName}"`}`,
+                        );
+
                         if (!projectName) {
                             log("User cancelled project name input");
                             return;

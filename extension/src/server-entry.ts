@@ -64,6 +64,11 @@ async function startServer() {
                         find: "@googlemaps/js-api-loader",
                         replacement: CORE_CONFIG.MAPS_SHIM_PATH,
                     },
+                    // Handle shared-module-styles.css at any depth
+                    {
+                        find: /.*shared-module-styles\.css$/,
+                        replacement: CORE_CONFIG.SHARED_STYLES_PATH,
+                    },
                 ],
             },
             optimizeDeps: {
