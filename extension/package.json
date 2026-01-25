@@ -1,8 +1,9 @@
 {
   "name": "genai-studio-preview",
-  "displayName": "GenAI Studio Preview",
+  "displayName": "GenAI Studio Preview Tool",
   "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
   "version": "1.1.0",
+  "icon": "assets/extension-icon.png",
   "publisher": "carlosfundora",
   "license": "Polyform-Noncommercial-1.0.0",
   "repository": {
@@ -141,6 +142,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./tsconfig.extension.json",
     "watch": "tsc -watch -p ./tsconfig.extension.json",
+    "test": "vitest",
     "package": "vsce package",
     "publish:openvsx": "ovsx publish"
   },
@@ -149,7 +151,8 @@
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.22.0",
     "ovsx": "^0.8.3",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.6",

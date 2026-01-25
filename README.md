@@ -1,4 +1,4 @@
-# GenAI Studio Preview
+# GenAI Studio Preview Tool
 
 Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SDK, supports local LLMs (Ollama/LFM), and enables mobile testing via QR codes.
 

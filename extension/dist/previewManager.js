@@ -47,7 +47,7 @@ class PreviewManager {
     statusCallbacks = [];
     constructor(context) {
         this.context = context;
-        this.outputChannel = vscode.window.createOutputChannel("GenAI Studio Preview");
+        this.outputChannel = vscode.window.createOutputChannel("GenAI Studio Preview Tool");
     }
     onStatusChange(callback) {
         this.statusCallbacks.push(callback);

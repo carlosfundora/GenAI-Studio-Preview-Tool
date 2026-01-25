@@ -1,6 +1,6 @@
 "use strict";
 /**
- * GenAI Studio Preview - VS Code Extension
+ * GenAI Studio Preview Tool - VS Code Extension
  *
  * Three-panel sidebar design:
  * 1. Active Previews (Webview) - Running URL + QR Code

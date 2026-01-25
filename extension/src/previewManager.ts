@@ -28,7 +28,7 @@ export class PreviewManager {
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
     this.outputChannel = vscode.window.createOutputChannel(
-      "GenAI Studio Preview",
+      "GenAI Studio Preview Tool",
     );
   }
 

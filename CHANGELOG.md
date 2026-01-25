@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to GenAI Studio Preview will be documented in this file.
+All notable changes to GenAI Studio Preview Tool will be documented in this file.
 
 ## [1.1.0] - 2025-01-25
 
