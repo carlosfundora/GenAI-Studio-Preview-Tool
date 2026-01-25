@@ -12,16 +12,26 @@ const _dirname =
         : path.dirname(fileURLToPath(eval("import.meta.url")));
 
 /**
+ * Resolves internal engine paths, handling .ts vs .js based on environment (dev vs dist).
+ */
+function resolveInternalPath(subPath: string) {
+    const fullPath = path.resolve(_dirname, subPath);
+    // If running from dist/ or the TS file doesn't exist, try the JS counterpart
+    if (fullPath.endsWith(".ts") && (_dirname.includes("dist") || !fs.existsSync(fullPath))) {
+        const jsPath = fullPath.replace(/\.ts$/, ".js");
+        if (fs.existsSync(jsPath)) return jsPath;
+    }
+    return fullPath;
+}
+
+/**
  * Shared configuration and path resolution for the GenAI Studio Preview engine.
  */
 export const CORE_CONFIG = {
-    MOCK_GENAI_PATH: path.resolve(_dirname, "./mocks/genai.ts"),
-    SHARED_STYLES_PATH: path.resolve(
-        _dirname,
-        "./assets/shared-module-styles.css",
-    ),
-    GEOLOCATION_SHIM_PATH: path.resolve(_dirname, "./shims/geolocation.ts"),
-    MAPS_SHIM_PATH: path.resolve(_dirname, "./shims/maps.ts"),
+    MOCK_GENAI_PATH: resolveInternalPath("./mocks/genai.ts"),
+    SHARED_STYLES_PATH: resolveInternalPath("./assets/shared-module-styles.css"),
+    GEOLOCATION_SHIM_PATH: resolveInternalPath("./shims/geolocation.ts"),
+    MAPS_SHIM_PATH: resolveInternalPath("./shims/maps.ts"),
 };
 
 /**

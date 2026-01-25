@@ -137,9 +137,9 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     console.log(`[GenAI] Adding project: ${projectPath} -> ${normalizedPath}`);
 
     if (normalizedPath !== projectPath || projectPath.includes("..")) {
-      console.error(`[GenAI] Invalid path traversal detected: ${projectPath}`);
+      console.error(`[GenAI] Security Alert: Invalid path traversal detected: "${projectPath}"`);
       vscode.window.showErrorMessage(
-        "Invalid project path: Path contains unsafe characters.",
+        `Failed to add project: The path "${projectPath}" is unsafe.`,
       );
       return;
     }
@@ -157,9 +157,9 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
       normalizedPath.startsWith(root),
     );
     if (!isAllowed) {
-      console.error(`[GenAI] Path denied: ${normalizedPath} not in allowed roots.`);
+      console.error(`[GenAI] Security Alert: Path "${normalizedPath}" is not within allowed roots (Home or Workspace).`);
       vscode.window.showErrorMessage(
-        "Invalid project path: Path must be within your home directory or workspace.",
+        "Access Denied: Projects must be located within your home directory or an open workspace folder for security reasons.",
       );
       return;
     }
@@ -168,11 +168,11 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
     const packageJsonPath = vscode.Uri.file(normalizedPath + "/package.json");
     try {
       await vscode.workspace.fs.stat(packageJsonPath);
-      console.log(`[GenAI] Found package.json at ${packageJsonPath.fsPath}`);
+      console.log(`[GenAI] Validation Success: Found package.json at ${packageJsonPath.fsPath}`);
     } catch {
-      console.error(`[GenAI] No package.json found at ${packageJsonPath.fsPath}`);
+      console.error(`[GenAI] Validation Error: No package.json found at ${packageJsonPath.fsPath}`);
       vscode.window.showErrorMessage(
-        "Invalid project: No package.json found in the selected folder.",
+        `Invalid Project: The folder "${normalizedPath}" does not appear to be a Node.js project (missing package.json).`,
       );
       return;
     }
