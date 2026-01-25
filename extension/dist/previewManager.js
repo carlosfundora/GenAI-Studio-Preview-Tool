@@ -38,7 +38,6 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PreviewManager = void 0;
 const child_process_1 = require("child_process");
-const path = __importStar(require("path"));
 const portfinder = __importStar(require("portfinder"));
 const vscode = __importStar(require("vscode"));
 class PreviewManager {
@@ -60,33 +59,36 @@ class PreviewManager {
         };
         this.statusCallbacks.forEach((cb) => cb(status));
     }
+    isRunning(projectPath) {
+        return this.previews.has(projectPath);
+    }
+    getPreviewUrl(projectPath) {
+        return this.previews.get(projectPath)?.url;
+    }
     async launchPreview(project) {
-        // Check if already running
         if (this.previews.has(project.path)) {
             const existing = this.previews.get(project.path);
-            vscode.window.showInformationMessage(`Preview already running at ${existing.url}`);
+            vscode.window.showInformationMessage(`Already running at ${existing.url}`);
             vscode.env.openExternal(vscode.Uri.parse(existing.url));
             return;
         }
         this.outputChannel.show();
         this.outputChannel.appendLine(`\n🚀 Launching ${project.name}...`);
+        const config = project.config;
         try {
-            // Find available port
-            const port = await portfinder.getPortPromise({ port: 4000 });
-            // Get extension config
-            const config = vscode.workspace.getConfiguration("genaiPreview");
-            const aiMode = config.get("aiMode", "mock");
-            const aiEndpoint = config.get("aiEndpoint", "http://localhost:11434/v1");
-            const aiModel = config.get("aiModel", "LFM2.5-1.2B-Instruct");
-            // Path to the core engine
-            const extensionPath = this.context.extensionPath;
-            const corePath = path.join(extensionPath, "..", "core");
-            // Spawn Vite dev server with our plugin
+            // Use configured port or find available
+            const port = await portfinder.getPortPromise({ port: config.port });
+            this.outputChannel.appendLine(`  Port: ${port}`);
+            this.outputChannel.appendLine(`  AI Mode: ${config.aiMode}`);
+            if (config.aiMode === "local") {
+                this.outputChannel.appendLine(`  Endpoint: ${config.aiEndpoint}`);
+                this.outputChannel.appendLine(`  Model: ${config.aiModel}`);
+            }
             const env = {
                 ...process.env,
-                GENAI_MODE: aiMode,
-                GENAI_ENDPOINT: aiEndpoint,
-                GENAI_MODEL: aiModel,
+                GENAI_MODE: config.aiMode,
+                GENAI_ENDPOINT: config.aiEndpoint,
+                GENAI_MODEL: config.aiModel,
                 GENAI_PORT: port.toString(),
             };
             const proc = (0, child_process_1.spawn)("npx", ["vite", "--port", port.toString(), "--strictPort", "--host"], {
@@ -95,48 +97,41 @@ class PreviewManager {
                 shell: true,
             });
             const url = `http://localhost:${port}`;
-            // Store instance
             this.previews.set(project.path, {
                 project,
                 process: proc,
                 port,
                 url,
             });
-            // Handle output
-            proc.stdout?.on("data", (data) => {
-                this.outputChannel.append(data.toString());
-            });
-            proc.stderr?.on("data", (data) => {
-                this.outputChannel.append(data.toString());
-            });
+            proc.stdout?.on("data", (data) => this.outputChannel.append(data.toString()));
+            proc.stderr?.on("data", (data) => this.outputChannel.append(data.toString()));
             proc.on("close", (code) => {
-                this.outputChannel.appendLine(`\n${project.name} exited with code ${code}`);
+                this.outputChannel.appendLine(`\n${project.name} exited (code ${code})`);
                 this.previews.delete(project.path);
                 this.notifyStatusChange();
             });
             proc.on("error", (err) => {
                 this.outputChannel.appendLine(`Error: ${err.message}`);
-                vscode.window.showErrorMessage(`Failed to start preview: ${err.message}`);
+                vscode.window.showErrorMessage(`Failed: ${err.message}`);
                 this.previews.delete(project.path);
                 this.notifyStatusChange();
             });
-            // Wait a moment for server to start
             await new Promise((resolve) => setTimeout(resolve, 2000));
             this.notifyStatusChange();
+            if (config.autoOpen) {
+                vscode.env.openExternal(vscode.Uri.parse(url));
+            }
             vscode.window
-                .showInformationMessage(`Preview running at ${url}`, "Open in Browser")
+                .showInformationMessage(`Running at ${url}`, "Open")
                 .then((action) => {
-                if (action === "Open in Browser") {
+                if (action)
                     vscode.env.openExternal(vscode.Uri.parse(url));
-                }
             });
-            // Open in browser
-            vscode.env.openExternal(vscode.Uri.parse(url));
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.outputChannel.appendLine(`Error: ${message}`);
-            vscode.window.showErrorMessage(`Failed to launch preview: ${message}`);
+            vscode.window.showErrorMessage(`Failed: ${message}`);
         }
     }
     async stopPreview(projectPath) {
@@ -149,18 +144,12 @@ class PreviewManager {
         }
     }
     async stopAllPreviews() {
-        this.outputChannel.appendLine("\nStopping all previews...");
-        for (const [path, instance] of this.previews) {
+        this.outputChannel.appendLine("\nStopping all...");
+        for (const [, instance] of this.previews) {
             instance.process.kill();
         }
         this.previews.clear();
         this.notifyStatusChange();
-    }
-    getRunningPreviews() {
-        return Array.from(this.previews.values()).map((p) => p.project);
-    }
-    isRunning(projectPath) {
-        return this.previews.has(projectPath);
     }
 }
 exports.PreviewManager = PreviewManager;

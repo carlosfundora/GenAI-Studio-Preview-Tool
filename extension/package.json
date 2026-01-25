@@ -28,93 +28,100 @@
     "react"
   ],
   "activationEvents": [
-    "workspaceContains:**/.versions",
-    "workspaceContains:**/vite.config.ts"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "genai-preview.launch",
-        "title": "GenAI Studio: Launch Preview",
+        "command": "genai-preview.launchProject",
+        "title": "Launch Preview",
         "icon": "$(play)"
       },
       {
-        "command": "genai-preview.stop",
-        "title": "GenAI Studio: Stop All Previews",
+        "command": "genai-preview.stopProject",
+        "title": "Stop Preview",
         "icon": "$(debug-stop)"
       },
       {
-        "command": "genai-preview.selectProject",
-        "title": "GenAI Studio: Select Project to Preview",
-        "icon": "$(folder-opened)"
+        "command": "genai-preview.addProject",
+        "title": "Add Project",
+        "icon": "$(add)"
+      },
+      {
+        "command": "genai-preview.removeProject",
+        "title": "Remove Project",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "genai-preview.refreshProjects",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "genai-preview.openInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(globe)"
       }
     ],
-    "views": {
-      "explorer": [
-        {
-          "id": "genai-preview-projects",
-          "name": "AI Studio Previews",
-          "when": "genai-preview.hasProjects"
-        }
-      ]
-    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "genai-preview",
-          "title": "GenAI Studio Preview",
-          "icon": "assets/sidebar-icon.svg"
+          "title": "GenAI Studio",
+          "icon": "$(beaker)"
+        }
+      ]
+    },
+    "views": {
+      "genai-preview": [
+        {
+          "id": "genai-projects",
+          "name": "Projects",
+          "type": "tree"
+        },
+        {
+          "id": "genai-config",
+          "name": "Configuration",
+          "type": "webview"
         }
       ]
     },
     "menus": {
       "view/title": [
         {
-          "command": "genai-preview.launch",
-          "when": "view == genai-preview-projects",
-          "group": "navigation"
+          "command": "genai-preview.addProject",
+          "when": "view == genai-projects",
+          "group": "navigation@1"
         },
         {
-          "command": "genai-preview.stop",
-          "when": "view == genai-preview-projects",
-          "group": "navigation"
+          "command": "genai-preview.refreshProjects",
+          "when": "view == genai-projects",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "genai-preview.launchProject",
+          "when": "view == genai-projects && viewItem == project-stopped",
+          "group": "inline@1"
+        },
+        {
+          "command": "genai-preview.stopProject",
+          "when": "view == genai-projects && viewItem == project-running",
+          "group": "inline@1"
+        },
+        {
+          "command": "genai-preview.openInBrowser",
+          "when": "view == genai-projects && viewItem == project-running",
+          "group": "inline@2"
+        },
+        {
+          "command": "genai-preview.removeProject",
+          "when": "view == genai-projects",
+          "group": "context"
         }
       ]
-    },
-    "configuration": {
-      "title": "GenAI Studio Preview",
-      "properties": {
-        "genaiPreview.aiMode": {
-          "type": "string",
-          "enum": [
-            "mock",
-            "local"
-          ],
-          "default": "mock",
-          "description": "AI mode: 'mock' for static responses, 'local' for local LLM"
-        },
-        "genaiPreview.aiEndpoint": {
-          "type": "string",
-          "default": "http://localhost:11434/v1",
-          "description": "Local AI endpoint (OpenAI-compatible API)"
-        },
-        "genaiPreview.aiModel": {
-          "type": "string",
-          "default": "LFM2.5-1.2B-Instruct",
-          "description": "Model name for local AI inference"
-        },
-        "genaiPreview.autoShutdown": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically stop preview when browser closes"
-        },
-        "genaiPreview.showQrCode": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show QR code for mobile access in terminal"
-        }
-      }
     }
   },
   "scripts": {

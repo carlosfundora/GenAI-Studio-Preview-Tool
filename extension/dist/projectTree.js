@@ -1,6 +1,7 @@
 "use strict";
 /**
  * Project Tree Provider - Discovers and displays AI Studio projects
+ * Now with persistent project list and per-project configuration
  */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -36,7 +37,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProjectTreeProvider = exports.ProjectItem = void 0;
+exports.RunningTreeProvider = exports.ProjectTreeProvider = exports.ProjectItem = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
@@ -45,14 +46,17 @@ class ProjectItem extends vscode.TreeItem {
     projectPath;
     projectType;
     collapsibleState;
-    constructor(label, projectPath, projectType, collapsibleState) {
+    config;
+    constructor(label, projectPath, projectType, collapsibleState, config) {
         super(label, collapsibleState);
         this.label = label;
         this.projectPath = projectPath;
         this.projectType = projectType;
         this.collapsibleState = collapsibleState;
-        this.tooltip = this.projectPath;
-        this.description = this.projectType;
+        this.config = config;
+        this.tooltip = `${this.projectPath}\nAI Mode: ${config?.aiMode || "mock"}`;
+        this.description =
+            config?.aiMode === "local" ? `🤖 ${config.aiModel || "local"}` : "mock";
         this.contextValue = "project";
         // Set icon based on type
         switch (this.projectType) {
@@ -65,13 +69,10 @@ class ProjectItem extends vscode.TreeItem {
             case "external":
                 this.iconPath = new vscode.ThemeIcon("globe");
                 break;
+            case "custom":
+                this.iconPath = new vscode.ThemeIcon("folder");
+                break;
         }
-        // Make clickable
-        this.command = {
-            command: "genai-preview.selectProject",
-            title: "Launch Preview",
-            arguments: [this],
-        };
     }
 }
 exports.ProjectItem = ProjectItem;
@@ -79,103 +80,165 @@ class ProjectTreeProvider {
     _onDidChangeTreeData = new vscode.EventEmitter();
     onDidChangeTreeData = this._onDidChangeTreeData.event;
     projects = [];
+    context;
+    constructor(context) {
+        this.context = context;
+        this.loadProjects();
+        this.discoverWorkspaceProjects();
+    }
+    loadProjects() {
+        const stored = this.context.globalState.get("genai-projects", []);
+        this.projects = stored;
+    }
+    async saveProjects() {
+        await this.context.globalState.update("genai-projects", this.projects);
+    }
     refresh() {
-        this.discoverProjects().then(() => {
-            this._onDidChangeTreeData.fire();
-        });
+        this.discoverWorkspaceProjects();
+        this._onDidChangeTreeData.fire();
     }
     getTreeItem(element) {
         return element;
     }
     getChildren(element) {
         if (element) {
-            // No children for project items
             return Promise.resolve([]);
         }
-        // Root level - return all discovered projects
-        return this.discoverProjects().then((projects) => projects.map((p) => new ProjectItem(p.name, p.path, p.type, vscode.TreeItemCollapsibleState.None)));
+        return Promise.resolve(this.projects.map((p) => new ProjectItem(p.name, p.path, p.type, vscode.TreeItemCollapsibleState.None, p.config)));
     }
-    async discoverProjects() {
-        const projects = [];
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            return projects;
+    getProjects() {
+        return this.projects.map((p) => ({
+            name: p.name,
+            path: p.path,
+            type: p.type === "custom" ? "external" : p.type,
+            config: p.config,
+        }));
+    }
+    getProjectConfig(projectPath) {
+        const project = this.projects.find((p) => p.path === projectPath);
+        return project?.config || {};
+    }
+    async addProject(name, projectPath) {
+        // Check if already exists
+        if (this.projects.some((p) => p.path === projectPath)) {
+            vscode.window.showWarningMessage("Project already in list.");
+            return;
         }
+        this.projects.push({
+            name,
+            path: projectPath,
+            type: "custom",
+            config: {},
+        });
+        await this.saveProjects();
+        this._onDidChangeTreeData.fire();
+    }
+    async removeProject(projectPath) {
+        this.projects = this.projects.filter((p) => p.path !== projectPath);
+        await this.saveProjects();
+        this._onDidChangeTreeData.fire();
+    }
+    async updateProjectConfig(projectPath, config) {
+        const project = this.projects.find((p) => p.path === projectPath);
+        if (project) {
+            project.config = { ...project.config, ...config };
+            await this.saveProjects();
+            this._onDidChangeTreeData.fire();
+        }
+    }
+    discoverWorkspaceProjects() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders)
+            return;
         for (const folder of workspaceFolders) {
             const rootDir = folder.uri.fsPath;
-            // 1. Scan .versions/legacy
+            // Auto-discover .versions directories
             const legacyDir = path.join(rootDir, ".versions/legacy");
-            if (fs.existsSync(legacyDir)) {
-                try {
-                    const folders = fs
-                        .readdirSync(legacyDir, { withFileTypes: true })
-                        .filter((d) => d.isDirectory())
-                        .map((d) => d.name);
-                    for (const folderName of folders) {
-                        const projectPath = path.join(legacyDir, folderName);
-                        if (fs.existsSync(path.join(projectPath, "package.json"))) {
-                            projects.push({
-                                name: `Legacy: ${folderName}`,
-                                path: projectPath,
-                                type: "legacy",
-                            });
-                        }
-                    }
-                }
-                catch (e) {
-                    console.error("Error scanning legacy dir:", e);
-                }
-            }
-            // 2. Scan .versions/feature
             const featureDir = path.join(rootDir, ".versions/feature");
-            if (fs.existsSync(featureDir)) {
-                try {
-                    const folders = fs
-                        .readdirSync(featureDir, { withFileTypes: true })
-                        .filter((d) => d.isDirectory())
-                        .map((d) => d.name);
-                    for (const folderName of folders) {
-                        const projectPath = path.join(featureDir, folderName);
-                        if (fs.existsSync(path.join(projectPath, "package.json"))) {
-                            projects.push({
-                                name: `Feature: ${folderName}`,
-                                path: projectPath,
-                                type: "feature",
-                            });
-                        }
-                    }
-                }
-                catch (e) {
-                    console.error("Error scanning feature dir:", e);
-                }
+            if (fs.existsSync(legacyDir)) {
+                this.scanVersionDir(legacyDir, "legacy");
             }
-            // 3. Check if root folder itself is an AI Studio project
-            if (fs.existsSync(path.join(rootDir, "package.json")) &&
-                fs.existsSync(path.join(rootDir, "vite.config.ts"))) {
-                // Check if it imports @google/genai
-                const packageJsonPath = path.join(rootDir, "package.json");
-                try {
-                    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
-                    const deps = {
-                        ...packageJson.dependencies,
-                        ...packageJson.devDependencies,
-                    };
-                    if (deps["@google/genai"]) {
-                        projects.push({
-                            name: `External: ${path.basename(rootDir)}`,
-                            path: rootDir,
-                            type: "external",
-                        });
-                    }
-                }
-                catch (e) {
-                    // Ignore parse errors
+            if (fs.existsSync(featureDir)) {
+                this.scanVersionDir(featureDir, "feature");
+            }
+            // Check if root is an AI Studio project
+            if (this.isAIStudioProject(rootDir)) {
+                const name = `External: ${path.basename(rootDir)}`;
+                if (!this.projects.some((p) => p.path === rootDir)) {
+                    this.projects.push({ name, path: rootDir, type: "external" });
                 }
             }
         }
-        this.projects = projects;
-        return projects;
+    }
+    scanVersionDir(dir, type) {
+        try {
+            const folders = fs
+                .readdirSync(dir, { withFileTypes: true })
+                .filter((d) => d.isDirectory())
+                .map((d) => d.name);
+            for (const folderName of folders) {
+                const projectPath = path.join(dir, folderName);
+                if (fs.existsSync(path.join(projectPath, "package.json"))) {
+                    const name = `${type === "legacy" ? "Legacy" : "Feature"}: ${folderName}`;
+                    if (!this.projects.some((p) => p.path === projectPath)) {
+                        this.projects.push({ name, path: projectPath, type });
+                    }
+                }
+            }
+        }
+        catch (e) {
+            console.error(`Error scanning ${dir}:`, e);
+        }
+    }
+    isAIStudioProject(dir) {
+        const packageJsonPath = path.join(dir, "package.json");
+        if (!fs.existsSync(packageJsonPath) ||
+            !fs.existsSync(path.join(dir, "vite.config.ts"))) {
+            return false;
+        }
+        try {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+            const deps = {
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies,
+            };
+            return !!deps["@google/genai"];
+        }
+        catch {
+            return false;
+        }
     }
 }
 exports.ProjectTreeProvider = ProjectTreeProvider;
+// Running Previews Tree Provider
+class RunningTreeProvider {
+    _onDidChangeTreeData = new vscode.EventEmitter();
+    onDidChangeTreeData = this._onDidChangeTreeData.event;
+    previewManager;
+    constructor(previewManager) {
+        this.previewManager = previewManager;
+    }
+    refresh() {
+        this._onDidChangeTreeData.fire();
+    }
+    getTreeItem(element) {
+        return element;
+    }
+    getChildren() {
+        const running = this.previewManager.getRunningPreviews();
+        if (running.length === 0) {
+            const item = new vscode.TreeItem("No previews running");
+            item.iconPath = new vscode.ThemeIcon("circle-outline");
+            return Promise.resolve([item]);
+        }
+        return Promise.resolve(running.map((p) => {
+            const item = new vscode.TreeItem(p.name);
+            item.iconPath = new vscode.ThemeIcon("debug-start", new vscode.ThemeColor("charts.green"));
+            item.description = `Running`;
+            item.tooltip = p.path;
+            return item;
+        }));
+    }
+}
+exports.RunningTreeProvider = RunningTreeProvider;
 //# sourceMappingURL=projectTree.js.map

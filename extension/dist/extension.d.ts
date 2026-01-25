@@ -1,7 +1,9 @@
 /**
  * GenAI Studio Preview - VS Code Extension
  *
- * Provides IDE integration for previewing AI Studio prototypes locally.
+ * Two-panel sidebar design:
+ * - Top: Projects list with play/stop buttons
+ * - Bottom: Configuration webview for selected project
  */
 import * as vscode from "vscode";
 export declare function activate(context: vscode.ExtensionContext): void;

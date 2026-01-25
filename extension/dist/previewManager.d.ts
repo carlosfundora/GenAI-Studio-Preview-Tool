@@ -2,11 +2,7 @@
  * Preview Manager - Manages Vite preview server instances
  */
 import * as vscode from "vscode";
-export interface ProjectInfo {
-    name: string;
-    path: string;
-    type: "legacy" | "feature" | "external";
-}
+import { StoredProject } from "./projectsTree";
 type StatusChangeCallback = (status: {
     running: boolean;
     count: number;
@@ -19,11 +15,11 @@ export declare class PreviewManager {
     constructor(context: vscode.ExtensionContext);
     onStatusChange(callback: StatusChangeCallback): void;
     private notifyStatusChange;
-    launchPreview(project: ProjectInfo): Promise<void>;
+    isRunning(projectPath: string): boolean;
+    getPreviewUrl(projectPath: string): string | undefined;
+    launchPreview(project: StoredProject): Promise<void>;
     stopPreview(projectPath: string): Promise<void>;
     stopAllPreviews(): Promise<void>;
-    getRunningPreviews(): ProjectInfo[];
-    isRunning(projectPath: string): boolean;
 }
 export {};
 //# sourceMappingURL=previewManager.d.ts.map

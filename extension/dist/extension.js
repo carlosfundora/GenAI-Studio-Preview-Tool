@@ -2,7 +2,9 @@
 /**
  * GenAI Studio Preview - VS Code Extension
  *
- * Provides IDE integration for previewing AI Studio prototypes locally.
+ * Two-panel sidebar design:
+ * - Top: Projects list with play/stop buttons
+ * - Bottom: Configuration webview for selected project
  */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -41,81 +43,115 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
+const configWebview_1 = require("./configWebview");
 const previewManager_1 = require("./previewManager");
-const projectTree_1 = require("./projectTree");
+const projectsTree_1 = require("./projectsTree");
 let previewManager;
-let projectTreeProvider;
+let projectsTreeProvider;
+let configWebviewProvider;
 function activate(context) {
     console.log("GenAI Studio Preview extension activated");
     // Initialize managers
     previewManager = new previewManager_1.PreviewManager(context);
-    projectTreeProvider = new projectTree_1.ProjectTreeProvider();
-    // Register tree view
-    const treeView = vscode.window.createTreeView("genai-preview-projects", {
-        treeDataProvider: projectTreeProvider,
-        showCollapseAll: true,
+    projectsTreeProvider = new projectsTree_1.ProjectsTreeProvider(context, previewManager);
+    configWebviewProvider = new configWebview_1.ConfigWebviewProvider(context, projectsTreeProvider);
+    // Register Projects tree view
+    const projectsView = vscode.window.createTreeView("genai-projects", {
+        treeDataProvider: projectsTreeProvider,
+        showCollapseAll: false,
     });
-    context.subscriptions.push(treeView);
-    // Set context for "when" clauses
-    vscode.commands.executeCommand("setContext", "genai-preview.hasProjects", true);
+    context.subscriptions.push(projectsView);
+    // When selection changes, update the config panel
+    projectsView.onDidChangeSelection((e) => {
+        if (e.selection.length > 0) {
+            const item = e.selection[0];
+            configWebviewProvider.showProjectConfig(item.projectPath);
+        }
+    });
+    // Register Configuration webview
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider("genai-config", configWebviewProvider));
     // Register commands
-    context.subscriptions.push(vscode.commands.registerCommand("genai-preview.launch", async () => {
-        const projects = await projectTreeProvider.discoverProjects();
-        if (projects.length === 0) {
-            vscode.window.showWarningMessage("No AI Studio projects found in workspace.");
+    context.subscriptions.push(
+    // Launch a project
+    vscode.commands.registerCommand("genai-preview.launchProject", async (item) => {
+        if (!item) {
+            vscode.window.showWarningMessage("Select a project to launch.");
             return;
         }
-        if (projects.length === 1) {
-            await previewManager.launchPreview(projects[0]);
+        const project = projectsTreeProvider.getProject(item.projectPath);
+        if (project) {
+            await previewManager.launchPreview(project);
+            projectsTreeProvider.refresh();
+        }
+    }), 
+    // Stop a project
+    vscode.commands.registerCommand("genai-preview.stopProject", async (item) => {
+        if (!item)
             return;
-        }
-        // Multiple projects - show quick pick
-        const selected = await vscode.window.showQuickPick(projects.map((p) => ({
-            label: p.name,
-            description: p.path,
-            project: p,
-        })), { placeHolder: "Select a project to preview" });
-        if (selected) {
-            await previewManager.launchPreview(selected.project);
-        }
-    }), vscode.commands.registerCommand("genai-preview.stop", async () => {
-        await previewManager.stopAllPreviews();
-        vscode.window.showInformationMessage("All previews stopped.");
-    }), vscode.commands.registerCommand("genai-preview.selectProject", async (item) => {
-        if (item) {
-            await previewManager.launchPreview({
-                name: item.label,
-                path: item.projectPath,
-                type: item.projectType,
+        await previewManager.stopPreview(item.projectPath);
+        projectsTreeProvider.refresh();
+    }), 
+    // Add a new project
+    vscode.commands.registerCommand("genai-preview.addProject", async () => {
+        const folderUri = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: "Select AI Studio Project",
+            title: "Add AI Studio Project",
+        });
+        if (folderUri && folderUri[0]) {
+            const projectPath = folderUri[0].fsPath;
+            const projectName = await vscode.window.showInputBox({
+                prompt: "Enter a name for this project",
+                value: projectPath.split("/").pop() || "My Project",
             });
+            if (projectName) {
+                await projectsTreeProvider.addProject(projectName, projectPath);
+                vscode.window.showInformationMessage(`Added: ${projectName}`);
+            }
         }
-    }), vscode.commands.registerCommand("genai-preview.refresh", () => {
-        projectTreeProvider.refresh();
+    }), 
+    // Remove a project
+    vscode.commands.registerCommand("genai-preview.removeProject", async (item) => {
+        if (!item)
+            return;
+        const confirm = await vscode.window.showWarningMessage(`Remove "${item.label}"?`, { modal: true }, "Remove");
+        if (confirm === "Remove") {
+            await projectsTreeProvider.removeProject(item.projectPath);
+        }
+    }), 
+    // Refresh projects
+    vscode.commands.registerCommand("genai-preview.refreshProjects", () => {
+        projectsTreeProvider.refresh();
+    }), 
+    // Open in browser
+    vscode.commands.registerCommand("genai-preview.openInBrowser", (item) => {
+        if (!item)
+            return;
+        const url = previewManager.getPreviewUrl(item.projectPath);
+        if (url) {
+            vscode.env.openExternal(vscode.Uri.parse(url));
+        }
     }));
-    // Status bar item
+    // Status bar
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(zap) GenAI";
+    statusBarItem.text = "$(beaker) GenAI";
     statusBarItem.tooltip = "GenAI Studio Preview";
-    statusBarItem.command = "genai-preview.launch";
+    statusBarItem.command = "workbench.view.extension.genai-preview";
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
-    // Watch for preview status changes
     previewManager.onStatusChange((status) => {
-        if (status.running) {
-            statusBarItem.text = `$(zap) GenAI: ${status.count} running`;
-            statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
-        }
-        else {
-            statusBarItem.text = "$(zap) GenAI";
-            statusBarItem.backgroundColor = undefined;
-        }
+        statusBarItem.text = status.running
+            ? `$(beaker) GenAI: ${status.count}`
+            : "$(beaker) GenAI";
+        statusBarItem.backgroundColor = status.running
+            ? new vscode.ThemeColor("statusBarItem.warningBackground")
+            : undefined;
+        projectsTreeProvider.refresh();
     });
-    // Initial project discovery
-    projectTreeProvider.refresh();
 }
 function deactivate() {
-    if (previewManager) {
-        previewManager.stopAllPreviews();
-    }
+    previewManager?.stopAllPreviews();
 }
 //# sourceMappingURL=extension.js.map
