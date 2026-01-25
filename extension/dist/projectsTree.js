@@ -76,11 +76,9 @@ class ProjectsTreeProvider {
     projects = [];
     context;
     previewManager;
-    viewType;
-    constructor(context, previewManager, viewType = "all") {
+    constructor(context, previewManager) {
         this.context = context;
         this.previewManager = previewManager;
-        this.viewType = viewType;
         this.loadProjects();
     }
     loadProjects() {
@@ -99,17 +97,14 @@ class ProjectsTreeProvider {
         return element;
     }
     getChildren() {
-        let filtered = this.projects;
-        if (this.viewType === "favorites") {
-            filtered = this.projects.filter((p) => p.isFavorite);
-        }
-        else if (this.viewType === "recents") {
-            // Show non-favorites, sorted by last used
-            filtered = this.projects
-                .filter((p) => !p.isFavorite)
-                .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
-        }
-        return Promise.resolve(filtered.map((p) => new ProjectItem(p.name, p.path, this.previewManager.isRunning(p.path), p.config, !!p.isFavorite)));
+        // Sort: Favorites first, then by name
+        const sorted = [...this.projects].sort((a, b) => {
+            if (a.isFavorite === b.isFavorite) {
+                return a.name.localeCompare(b.name);
+            }
+            return a.isFavorite ? -1 : 1;
+        });
+        return Promise.resolve(sorted.map((p) => new ProjectItem(p.name, p.path, this.previewManager.isRunning(p.path), p.config, !!p.isFavorite)));
     }
     getProject(projectPath) {
         return this.projects.find((p) => p.path === projectPath);

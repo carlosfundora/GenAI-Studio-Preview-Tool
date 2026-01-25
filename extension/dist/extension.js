@@ -2,11 +2,10 @@
 /**
  * GenAI Studio Preview - VS Code Extension
  *
- * Four-panel sidebar design:
+ * Three-panel sidebar design:
  * 1. Active Previews (Webview) - Running URL + QR Code
- * 2. Favorites (Tree) - Starred projects
- * 3. Recent Projects (Tree) - Other projects history
- * 4. Configuration (Webview) - Settings for selection
+ * 2. Projects (Tree) - List of projects (Favorites + All)
+ * 3. Configuration (Webview) - Settings for selection
  */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -51,42 +50,28 @@ const previewManager_1 = require("./previewManager");
 const projectsTree_1 = require("./projectsTree");
 let previewManager;
 let projectsTreeProvider;
-let favoritesProvider;
-let recentsProvider;
 let configWebviewProvider;
 let activeWebviewProvider;
 function activate(context) {
     console.log("GenAI Studio Preview extension activated");
     // Initialize managers
     previewManager = new previewManager_1.PreviewManager(context);
-    // Shared data source logic handled internally by providers reading globalState
-    favoritesProvider = new projectsTree_1.ProjectsTreeProvider(context, previewManager, "favorites");
-    recentsProvider = new projectsTree_1.ProjectsTreeProvider(context, previewManager, "recents");
-    // We keep a "main" provider just for logic re-use if needed, but UI uses specific ones
-    projectsTreeProvider = new projectsTree_1.ProjectsTreeProvider(context, previewManager, "all");
+    projectsTreeProvider = new projectsTree_1.ProjectsTreeProvider(context, previewManager);
     configWebviewProvider = new configWebview_1.ConfigWebviewProvider(context, projectsTreeProvider);
     activeWebviewProvider = new activeWebview_1.ActiveWebviewProvider(previewManager);
     // 1. Active Previews Webview
     context.subscriptions.push(vscode.window.registerWebviewViewProvider("genai-active", activeWebviewProvider));
-    // 2. Favorites Tree
-    const favoritesView = vscode.window.createTreeView("genai-favorites", {
-        treeDataProvider: favoritesProvider,
+    // 2. Projects Tree
+    const projectsView = vscode.window.createTreeView("genai-projects", {
+        treeDataProvider: projectsTreeProvider,
         showCollapseAll: false,
     });
-    context.subscriptions.push(favoritesView);
-    // 3. Recent Projects Tree
-    const recentsView = vscode.window.createTreeView("genai-recents", {
-        treeDataProvider: recentsProvider,
-        showCollapseAll: false,
-    });
-    context.subscriptions.push(recentsView);
-    // 4. Configuration Webview
+    context.subscriptions.push(projectsView);
+    // 3. Configuration Webview
     context.subscriptions.push(vscode.window.registerWebviewViewProvider("genai-config", configWebviewProvider));
     // Unified refresh function
     const refreshAll = () => {
-        favoritesProvider.refresh();
-        recentsProvider.refresh();
-        projectsTreeProvider.refresh(); // Crucial: Update the provider used by config panel
+        projectsTreeProvider.refresh();
         activeWebviewProvider.refresh();
     };
     // Status change listener
@@ -103,19 +88,16 @@ function activate(context) {
         refreshAll();
     });
     // Selection handling for config panel
-    const handleSelection = (e) => {
+    projectsView.onDidChangeSelection((e) => {
         if (e.selection.length > 0) {
             const item = e.selection[0];
             configWebviewProvider.showProjectConfig(item.projectPath);
         }
-    };
-    favoritesView.onDidChangeSelection(handleSelection);
-    recentsView.onDidChangeSelection(handleSelection);
+    });
     // Commands
     context.subscriptions.push(vscode.commands.registerCommand("genai-preview.launchProject", async (item) => {
         if (!item)
             return;
-        // Mark as used
         await projectsTreeProvider.markAsUsed(item.projectPath);
         const project = projectsTreeProvider.getProject(item.projectPath);
         if (project) {
@@ -163,7 +145,6 @@ function activate(context) {
     }), vscode.commands.registerCommand("genai-preview.showQrCode", (item) => {
         if (!item)
             return;
-        // Just focus active view, ideally we'd highlight the specific one but for now this works
         vscode.commands.executeCommand("genai-active.focus");
     }));
 }

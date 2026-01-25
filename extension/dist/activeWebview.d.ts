@@ -10,5 +10,6 @@ export declare class ActiveWebviewProvider implements vscode.WebviewViewProvider
     resolveWebviewView(webviewView: vscode.WebviewView): void;
     refresh(): Promise<void>;
     private getNetworkIp;
+    private getStyles;
 }
 //# sourceMappingURL=activeWebview.d.ts.map

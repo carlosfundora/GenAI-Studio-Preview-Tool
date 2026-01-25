@@ -29,7 +29,9 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:genai-projects"
+    "onView:genai-active",
+    "onView:genai-projects",
+    "onView:genai-config"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -41,7 +43,7 @@
       },
       {
         "command": "genai-preview.stopProject",
-        "title": "Stop Preview",
+        "title": "Stop",
         "icon": "$(debug-stop)"
       },
       {
@@ -87,13 +89,8 @@
           "type": "webview"
         },
         {
-          "id": "genai-favorites",
-          "name": "Favorites",
-          "type": "tree"
-        },
-        {
-          "id": "genai-recents",
-          "name": "Recent Projects",
+          "id": "genai-projects",
+          "name": "Projects",
           "type": "tree"
         },
         {
@@ -107,24 +104,24 @@
       "view/title": [
         {
           "command": "genai-preview.addProject",
-          "when": "view == genai-recents",
+          "when": "view == genai-projects",
           "group": "navigation@1"
         },
         {
           "command": "genai-preview.refreshProjects",
-          "when": "view == genai-recents",
+          "when": "view == genai-projects",
           "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
           "command": "genai-preview.launchProject",
-          "when": "viewItem == project-stopped",
+          "when": "viewItem == project-stopped || viewItem == project-stopped-favorite",
           "group": "inline@1"
         },
         {
           "command": "genai-preview.stopProject",
-          "when": "viewItem == project-running",
+          "when": "viewItem == project-running || viewItem == project-running-favorite",
           "group": "inline@1"
         },
         {
@@ -134,7 +131,7 @@
         },
         {
           "command": "genai-preview.removeProject",
-          "when": "view == genai-recents",
+          "when": "view == genai-projects",
           "group": "context"
         }
       ]

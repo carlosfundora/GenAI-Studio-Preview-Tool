@@ -24,139 +24,76 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
   async refresh(): Promise<void> {
     if (!this._view) return;
 
-    const running = this.previewManager.getRunningPreviews();
-    const previewsHtml = await Promise.all(
-      running.map(async (p: StoredProject) => {
-        const url = this.previewManager.getPreviewUrl(p.path);
-        const networkUrl = url?.replace(
-          "localhost",
-          this.getNetworkIp() || "localhost",
-        );
-        const qrCodeData = networkUrl ? await QRCode.toDataURL(networkUrl) : "";
+    try {
+      const running = this.previewManager.getRunningPreviews();
+      const previewsHtml = await Promise.all(
+        running.map(async (p: StoredProject) => {
+          const url = this.previewManager.getPreviewUrl(p.path);
+          const networkUrl = url?.replace(
+            "localhost",
+            this.getNetworkIp() || "localhost",
+          );
+          const qrCodeData = networkUrl
+            ? await QRCode.toDataURL(networkUrl)
+            : "";
 
-        return `
-          <div class="card">
-            <div class="header">
-              <span class="status-dot"></span>
-              <strong>${p.name}</strong>
-            </div>
-            <div class="url">
-              <a href="${url}">${url}</a>
-            </div>
-            ${
-              networkUrl
-                ? `
-              <div class="qr-section">
-                <img src="${qrCodeData}" class="qr-code" />
-                <div class="scan-text">Scan for Mobile</div>
+          return `
+            <div class="card">
+              <div class="header">
+                <span class="status-dot"></span>
+                <strong>${p.name}</strong>
               </div>
-            `
-                : ""
-            }
-            <div class="actions">
-              <button onclick="stop('${p.path}')">Stop</button>
+              <div class="url">
+                <a href="${url}">${url}</a>
+              </div>
+              ${
+                networkUrl
+                  ? `
+                <div class="qr-section">
+                  <img src="${qrCodeData}" class="qr-code" />
+                  <div class="scan-text">Scan for Mobile</div>
+                </div>
+              `
+                  : ""
+              }
+              <div class="actions">
+                <button onclick="stop('${p.path}')">Stop</button>
+              </div>
             </div>
-          </div>
-        `;
-      }),
-    );
+          `;
+        }),
+      );
 
-    this._view.webview.html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body {
-            font-family: var(--vscode-font-family);
-            padding: 12px;
-            color: var(--vscode-foreground);
-            background-color: var(--vscode-sideBar-background);
-          }
-          .card {
-            background: var(--vscode-editor-background);
-            border: 1px solid var(--vscode-panel-border);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-          }
-          .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 13px;
-          }
-          .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--vscode-charts-green);
-            margin-right: 8px;
-          }
-          .url {
-            font-size: 11px;
-            margin-bottom: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            opacity: 0.8;
-          }
-          .url a {
-            color: var(--vscode-textLink-foreground);
-            text-decoration: none;
-          }
-          .qr-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: white;
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-          }
-          .qr-code {
-            width: 120px;
-            height: 120px;
-          }
-          .scan-text {
-            color: #333;
-            font-size: 10px;
-            margin-top: 4px;
-            font-weight: 500;
-          }
-          button {
-            width: 100%;
-            padding: 6px;
-            background: var(--vscode-button-secondaryBackground);
-            color: var(--vscode-button-secondaryForeground);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-          }
-          button:hover {
-            background: var(--vscode-button-secondaryHoverBackground);
-          }
-          .empty {
-            text-align: center;
-            opacity: 0.6;
-            margin-top: 24px;
-          }
-        </style>
-      </head>
-      <body>
-        ${previewsHtml.length > 0 ? previewsHtml.join("") : '<div class="empty">No active previews</div>'}
-        <script>
-          const vscode = acquireVsCodeApi();
-          function stop(path) {
-            vscode.postMessage({ type: 'stop', path });
-          }
-        </script>
-      </body>
-      </html>
-    `;
+      this._view.webview.html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            ${this.getStyles()}
+          </style>
+        </head>
+        <body>
+          ${previewsHtml.length > 0 ? previewsHtml.join("") : '<div class="empty">No active previews</div>'}
+          <script>
+            const vscode = acquireVsCodeApi();
+            function stop(path) {
+              vscode.postMessage({ type: 'stop', path });
+            }
+          </script>
+        </body>
+        </html>
+      `;
+    } catch (e) {
+      this._view.webview.html = `
+        <!DOCTYPE html>
+        <html><body><div style="padding:10px;color:var(--vscode-errorForeground)">
+          Error loading active previews: ${e instanceof Error ? e.message : String(e)}
+        </div></body></html>
+      `;
+    }
 
     this._view.webview.onDidReceiveMessage((message) => {
       if (message.type === "stop") {
@@ -178,5 +115,84 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
       }
     }
     return undefined;
+  }
+  private getStyles(): string {
+    return `
+      body {
+        font-family: var(--vscode-font-family);
+        padding: 12px;
+        color: var(--vscode-foreground);
+        background-color: var(--vscode-sideBar-background);
+      }
+      .card {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--vscode-charts-green);
+        margin-right: 8px;
+      }
+      .url {
+        font-size: 11px;
+        margin-bottom: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0.8;
+      }
+      .url a {
+        color: var(--vscode-textLink-foreground);
+        text-decoration: none;
+      }
+      .qr-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: white;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 12px;
+      }
+      .qr-code {
+        width: 120px;
+        height: 120px;
+      }
+      .scan-text {
+        color: #333;
+        font-size: 10px;
+        margin-top: 4px;
+        font-weight: 500;
+      }
+      button {
+        width: 100%;
+        padding: 6px;
+        background: var(--vscode-button-secondaryBackground);
+        color: var(--vscode-button-secondaryForeground);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button:hover {
+        background: var(--vscode-button-secondaryHoverBackground);
+      }
+      .empty {
+        text-align: center;
+        opacity: 0.6;
+        margin-top: 24px;
+      }
+    `;
   }
 }

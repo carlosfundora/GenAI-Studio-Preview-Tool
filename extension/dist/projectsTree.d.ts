@@ -32,8 +32,7 @@ export declare class ProjectsTreeProvider implements vscode.TreeDataProvider<Pro
     private projects;
     private context;
     private previewManager;
-    private viewType;
-    constructor(context: vscode.ExtensionContext, previewManager: PreviewManager, viewType?: "favorites" | "recents" | "all");
+    constructor(context: vscode.ExtensionContext, previewManager: PreviewManager);
     private loadProjects;
     private saveProjects;
     refresh(): void;

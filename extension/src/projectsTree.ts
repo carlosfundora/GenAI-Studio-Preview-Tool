@@ -66,16 +66,13 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
   private projects: StoredProject[] = [];
   private context: vscode.ExtensionContext;
   private previewManager: PreviewManager;
-  private viewType: "favorites" | "recents" | "all";
 
   constructor(
     context: vscode.ExtensionContext,
     previewManager: PreviewManager,
-    viewType: "favorites" | "recents" | "all" = "all",
   ) {
     this.context = context;
     this.previewManager = previewManager;
-    this.viewType = viewType;
     this.loadProjects();
   }
 
@@ -102,19 +99,16 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
   }
 
   getChildren(): Thenable<ProjectItem[]> {
-    let filtered = this.projects;
-
-    if (this.viewType === "favorites") {
-      filtered = this.projects.filter((p) => p.isFavorite);
-    } else if (this.viewType === "recents") {
-      // Show non-favorites, sorted by last used
-      filtered = this.projects
-        .filter((p) => !p.isFavorite)
-        .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
-    }
+    // Sort: Favorites first, then by name
+    const sorted = [...this.projects].sort((a, b) => {
+      if (a.isFavorite === b.isFavorite) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.isFavorite ? -1 : 1;
+    });
 
     return Promise.resolve(
-      filtered.map(
+      sorted.map(
         (p) =>
           new ProjectItem(
             p.name,
