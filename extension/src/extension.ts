@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
       100,
     );
     statusBarItem.text = "$(beaker) GenAI";
-    statusBarItem.tooltip = "GenAI Studio Preview";
+    statusBarItem.tooltip = "GenAI Studio Preview Tool";
     statusBarItem.command = "genai-active.focus";
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
@@ -173,6 +173,13 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.commands.executeCommand("genai-active.focus");
         },
       ),
+
+      vscode.commands.registerCommand("genai-preview.openSettings", () => {
+        vscode.commands.executeCommand(
+          "workbench.action.openSettings",
+          "@ext:carlosfundora.genai-studio-preview",
+        );
+      }),
     );
   } catch (error) {
     console.error("Failed to activate GenAI Studio Preview:", error);

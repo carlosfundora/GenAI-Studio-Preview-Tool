@@ -3,7 +3,7 @@
   "displayName": "GenAI Studio Preview Tool",
   "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
   "version": "1.2.0",
-  "icon": "assets/extension-icon.png",
+  "icon": "assets/extension-icon.svg",
   "publisher": "carlosfundora",
   "license": "Polyform-Noncommercial-1.0.0",
   "repository": {
@@ -72,13 +72,18 @@
         "command": "genai-preview.showQrCode",
         "title": "Show QR Code",
         "icon": "$(device-mobile)"
+      },
+      {
+        "command": "genai-preview.openSettings",
+        "title": "Settings",
+        "icon": "$(gear)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "genai-preview",
-          "title": "GenAI Studio Preview",
+          "title": "GenAI Studio Preview Tool",
           "icon": "$(mirror)"
         }
       ]
@@ -113,6 +118,11 @@
           "command": "genai-preview.refreshProjects",
           "when": "view == genai-projects",
           "group": "navigation@2"
+        },
+        {
+          "command": "genai-preview.openSettings",
+           "when": "view == genai-projects",
+           "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -139,7 +149,7 @@
       ]
     },
     "configuration": {
-      "title": "GenAI Studio Preview",
+      "title": "GenAI Studio Preview Tool",
       "properties": {
         "genaiPreview.AI.Mode": {
           "type": "string",
