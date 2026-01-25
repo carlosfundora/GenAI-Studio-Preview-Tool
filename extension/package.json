@@ -116,7 +116,7 @@
           "icon": "$(gear)"
         }
       ]
-    }
+    },
     "menus": {
       "view/title": [
         {
