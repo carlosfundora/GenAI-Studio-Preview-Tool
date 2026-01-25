@@ -68,7 +68,7 @@
       "activitybar": [
         {
           "id": "genai-preview",
-          "title": "GenAI Studio",
+          "title": "GenAI Studio Preview",
           "icon": "$(beaker)"
         }
       ]

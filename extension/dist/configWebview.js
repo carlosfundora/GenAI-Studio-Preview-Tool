@@ -56,11 +56,19 @@ class ConfigWebviewProvider {
                 vscode.window.showInformationMessage("Configuration saved!");
             }
         });
-        this.showEmptyState();
+        // If we have a selected project, show it. Otherwise empty state.
+        if (this.currentProjectPath) {
+            this.showProjectConfig(this.currentProjectPath);
+        }
+        else {
+            this.showEmptyState();
+        }
     }
     showProjectConfig(projectPath) {
         this.currentProjectPath = projectPath;
         const project = this.projectsProvider.getProject(projectPath);
+        // If view isn't ready yet, just return (currentProjectPath is saved)
+        // When view resolves, it will check currentProjectPath
         if (!project || !this._view)
             return;
         this._view.webview.html = this.getConfigHtml(project.name, project.config);
@@ -70,13 +78,17 @@ class ConfigWebviewProvider {
             return;
         this._view.webview.html = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             font-family: var(--vscode-font-family);
             padding: 16px;
             color: var(--vscode-foreground);
+            background-color: var(--vscode-sideBar-background);
           }
           .empty { opacity: 0.6; text-align: center; margin-top: 32px; }
         </style>
@@ -92,30 +104,43 @@ class ConfigWebviewProvider {
     getConfigHtml(name, config) {
         return `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             font-family: var(--vscode-font-family);
             padding: 12px;
             color: var(--vscode-foreground);
+            background-color: var(--vscode-sideBar-background);
             font-size: 13px;
           }
           h3 {
-            margin: 0 0 12px 0;
-            font-size: 14px;
+            margin: 0 0 16px 0;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             border-bottom: 1px solid var(--vscode-panel-border);
             padding-bottom: 8px;
           }
-          .field { margin-bottom: 12px; }
+          .field { margin-bottom: 16px; }
           label {
             display: block;
-            margin-bottom: 4px;
-            opacity: 0.8;
-            font-size: 11px;
-            text-transform: uppercase;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
           }
-          input, select {
+          .help-text {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+            margin-bottom: 4px;
+          }
+          input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 6px 8px;
             background: var(--vscode-input-background);
@@ -123,19 +148,25 @@ class ConfigWebviewProvider {
             border: 1px solid var(--vscode-input-border);
             border-radius: 4px;
             box-sizing: border-box;
+            font-family: inherit;
           }
-          input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
+          input:focus, select:focus {
+            outline: 1px solid var(--vscode-focusBorder);
+            border-color: var(--vscode-focusBorder);
           }
           .checkbox-field {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            margin-bottom: 12px;
           }
-          .checkbox-field label {
-            margin: 0;
-            text-transform: none;
-            font-size: 13px;
+          input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0 8px 0 0;
+            accent-color: var(--vscode-button-background);
+          }
+          .checkbox-label {
+            line-height: 1.4;
           }
           button {
             width: 100%;
@@ -146,16 +177,19 @@ class ConfigWebviewProvider {
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
-            margin-top: 8px;
+            font-weight: 500;
+            margin-top: 16px;
+            transition: opacity 0.2s;
           }
           button:hover {
             background: var(--vscode-button-hoverBackground);
           }
           .local-options {
-            margin-top: 8px;
-            padding: 8px;
-            background: var(--vscode-editor-background);
-            border-radius: 4px;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--vscode-textBlockQuote-background);
+            border-left: 3px solid var(--vscode-textBlockQuote-border);
+            border-radius: 2px;
           }
         </style>
       </head>
@@ -163,40 +197,47 @@ class ConfigWebviewProvider {
         <h3>${name}</h3>
 
         <div class="field">
-          <label>Port</label>
+          <label>Preview Port</label>
           <input type="number" id="port" value="${config.port}" min="3000" max="9999">
+          <div class="help-text">Port to run the preview server on</div>
         </div>
 
         <div class="field">
           <label>AI Mode</label>
           <select id="aiMode">
-            <option value="mock" ${config.aiMode === "mock" ? "selected" : ""}>Mock (Simulated Responses)</option>
+            <option value="mock" ${config.aiMode === "mock" ? "selected" : ""}>Mock (Simulated)</option>
             <option value="local" ${config.aiMode === "local" ? "selected" : ""}>Local LLM (Ollama/LFM)</option>
           </select>
         </div>
 
         <div id="localOptions" class="local-options" style="display: ${config.aiMode === "local" ? "block" : "none"}">
           <div class="field">
-            <label>Endpoint</label>
+            <label>Ollama Endpoint</label>
             <input type="text" id="aiEndpoint" value="${config.aiEndpoint}" placeholder="http://localhost:11434/v1">
           </div>
           <div class="field">
-            <label>Model</label>
+            <label>Model Name</label>
             <input type="text" id="aiModel" value="${config.aiModel}" placeholder="LFM2.5-1.2B-Instruct">
           </div>
         </div>
 
         <div class="field checkbox-field">
           <input type="checkbox" id="autoOpen" ${config.autoOpen ? "checked" : ""}>
-          <label for="autoOpen">Open browser on launch</label>
+          <div class="checkbox-label">
+            <label for="autoOpen" style="margin-bottom:0">Auto-open Browser</label>
+            <div class="help-text">Open browser when launch starts</div>
+          </div>
         </div>
 
         <div class="field checkbox-field">
           <input type="checkbox" id="hotReload" ${config.hotReload ? "checked" : ""}>
-          <label for="hotReload">Enable hot reload</label>
+          <div class="checkbox-label">
+            <label for="hotReload" style="margin-bottom:0">Hot Reload</label>
+            <div class="help-text">Reload page on code changes</div>
+          </div>
         </div>
 
-        <button id="save">💾 Save Configuration</button>
+        <button id="save">Save Configuration</button>
 
         <script>
           const vscode = acquireVsCodeApi();
