@@ -4,8 +4,16 @@
   "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
   "version": "1.2.0",
   "icon": "assets/extension-icon.svg",
+  "galleryBanner": {
+    "color": "#2b2d3e",
+    "theme": "dark"
+  },
   "publisher": "carlosfundora",
   "license": "Polyform-Noncommercial-1.0.0",
+  "homepage": "https://github.com/carlosfundora/genai-studio-preview/blob/master/README.md",
+  "bugs": {
+    "url": "https://github.com/carlosfundora/genai-studio-preview/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/carlosfundora/genai-studio-preview"
@@ -14,9 +22,10 @@
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other",
-    "Debuggers",
-    "Testing"
+    "Testing",
+    "Visualization",
+    "Machine Learning",
+    "Programming Languages"
   ],
   "keywords": [
     "ai-studio",

@@ -1,106 +1,98 @@
 # GenAI Studio Preview Tool
 
-Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SDK, supports local LLMs (Ollama/LFM), and enables mobile testing via QR codes.
+<div align="center">
+  <img src="assets/extension-icon.svg" width="128" alt="GenAI Studio Preview Tool Icon" />
+  <h1>GenAI Studio Preview Tool</h1>
+  <p><strong>Preview AI Studio prototypes locally. Mock GenAI SDK, local LLMs, and mobile testing.</strong></p>
+
+  [![Version](https://img.shields.io/visual-studio-marketplace/v/carlosfundora.genai-studio-preview?style=flat-square&color=007acc)](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview)
+  [![Installs](https://img.shields.io/visual-studio-marketplace/i/carlosfundora.genai-studio-preview?style=flat-square&color=green)](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview)
+  [![License](https://img.shields.io/github/license/carlosfundora/genai-studio-preview?style=flat-square&color=blue)](LICENSE)
+</div>
+
+---
+
+**GenAI Studio Preview Tool** is the ultimate companion for AI Studio prototyping. It allows you to run your prototypes locally without changing a single line of code. It mocks the Google GenAI SDK, redirects AI calls to local offline models (Ollama/LFM), and provides a seamless mobile testing experience via QR codes.
 
 ## Features
 
-- **Zero-Config Preview**: Just run and your AI Studio app works
-- **Mobile Testing**: **QR Code** in sidebar for instant phone access
-- **3-Panel Sidebar**:
-  - ✨ **Active Previews**: Live previews with QR codes
-  - 📁 **Projects**: Favorites + all projects
-  - ⚙️ **Configuration**: Per-project settings (Port, AI Mode, Model)
-- **GenAI SDK Mock**: Full enum support, streaming, tool calls, embeddings
-- **Local AI Support**: Route to Ollama, LFM, or any OpenAI-compatible endpoint
-- **API Shims**: Google Maps → OpenStreetMap/Leaflet, Geolocation mock
+- **⚡ Zero-Config Preview**: Just run `npx genai-studio-preview` and your app works.
+- **📱 Mobile Testing**: Instant **QR Code** in the sidebar to test on your phone.
+- **🤖 Local AI Loading**: Route everything to **Ollama**, **LFM**, or **OpenAI**-compatible endpoints.
+- **🧠 GenAI SDK Mock**: Complete simulation of the `@google/genai` SDK (streaming, tool calls, embeddings).
+- **🗺️ API Shims**: Automatic polyfills for Google Maps (Leaflet/OSM) and Geolocation.
+- **🛠️ 3-Panel Sidebar**:
+  - **Active Previews**: Manage running servers.
+  - **Projects**: Quick access to your favorite prototypes.
+  - **Configuration**: Fine-tune ports and AI models per project.
 
-## Quick Start
-### 1. Configure the Extension
-Go to **Settings** (`Ctrl+,`) and search for `GenAI`. Configure your local AI backend:
-- **AI > Endpoint**: The URL of your local inference server (e.g., `http://localhost:11434/v1` for Ollama).
-- **AI > Mode**: Set to `local` if you want to use the inference server by default.
+## Installation
 
-### 2. Launch a Preview
+Launch VS Code Quick Open (`Ctrl+P`), paste the following command, and press enter:
+
 ```bash
-# From your AI Studio project
-npx genai-studio-preview
-
-# Or with the VS Code extension
-# Ctrl+Shift+P → "GenAI Studio: Add Project"
+ext install carlosfundora.genai-studio-preview
 ```
 
-## Configuring Local AI Backend
+## Quick Start
 
-To use a local LLM (like Llama 3 or Qwen 2.5) instead of the mock backend:
+### 1. Launch a Preview
+You can launch a preview directly from your project folder:
+
+```bash
+# Terminal
+npx genai-studio-preview
+```
+
+or via the **Command Palette** (`Ctrl+Shift+P`):
+> `GenAI Studio: Add Project`
+
+### 2. Configure Local AI (Optional)
+To use a local LLM like Llama 3 or Qwen 2.5:
 
 1.  **Install Ollama**: [https://ollama.com](https://ollama.com)
-2.  **Pull a Model**:
-    ```bash
-    ollama pull qwen2.5:1.5b
-    ```
-3.  **Configure Extension**:
-    - Set `Genai Preview > AI: Endpoint` to `http://localhost:11434/v1`
-    - Set `Genai Preview > AI: Model` to `qwen2.5:1.5b`
-4.  **Verify**:
-    - Launch a project.
-    - Change "AI Mode" to **Local** in the configuration panel.
-    - Generate text in your app. It should now stream from Ollama.
+2.  **Pull a Model**: `ollama pull qwen2.5:1.5b`
+3.  **Configure**:
+    -   Click the **Gear Icon** ⚙️ in the GenAI sidebar.
+    -   Set **AI Mode** to `local`.
+    -   Set **Model** to `qwen2.5:1.5b`.
 
-## Configuration
+## Resources
 
-Create `.genairc.json` in your project for per-project overrides:
+- [**Repository**](https://github.com/carlosfundora/genai-studio-preview)
+- [**Issue Tracker**](https://github.com/carlosfundora/genai-studio-preview/issues)
+- [**Changelog**](CHANGELOG.md)
+- [**License**](LICENSE)
+
+## Configuration Reference
+
+You can also drop a `.genairc.json` in your project root:
 
 ```json
 {
   "ai": {
     "mode": "local",
     "endpoint": "http://localhost:11434/v1",
-    "models": {
-      "text": "qwen2.5:1.5b"
-    }
+    "models": { "text": "qwen2.5:1.5b" }
   },
   "location": {
     "mode": "mock",
-    "mockCoords": { "latitude": 29.9511, "longitude": -90.0715 }
+    "mockCoords": { "latitude": 40.7128, "longitude": -74.0060 }
   }
 }
 ```
 
-## Docker (with AI Backend)
+## Docker Support
 
-The Docker setup includes an Ollama AI backend that automatically downloads models.
+Run with full AI backend stack:
 
 ```bash
-# CPU-only
+# CPU
 docker-compose --profile cpu up
 
-# With GPU (NVIDIA)
+# GPU (NVIDIA)
 docker-compose --profile gpu up
 ```
 
-**Services**:
-
-- `preview-launcher`: Runs the preview server (ports 4000-4010)
-- `ai-backend` / `ai-backend-gpu`: Ollama with `qwen2.5:1.5b` and `nomic-embed-text`
-
-## IDE Extension
-
-Install from VSIX or OpenVSX:
-
-```bash
-code --install-extension genai-studio-preview-1.1.0.vsix
-```
-
-## API Shims
-
-The tool automatically shims these APIs for offline preview:
-
-| Original API                | Shimmed To     | Notes                         |
-| --------------------------- | -------------- | ----------------------------- |
-| `@google/genai`             | Mock/Local LLM | Full SDK compatibility        |
-| `@googlemaps/js-api-loader` | Leaflet + OSM  | Map, Marker, LatLng supported |
-| `navigator.geolocation`     | Configurable   | Passthrough, mock, or prompt  |
-
-## License
-
-Polyform Noncommercial 1.0.0
+---
+**Enjoying the tool?** Don't forget to [rate it ⭐⭐⭐⭐⭐](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview) on the Marketplace!
