@@ -1,14 +1,9 @@
 # GenAI Studio Preview Tool
 
-<div align="center">
-  <img src="assets/extension-icon.svg" width="128" alt="GenAI Studio Preview Tool Icon" />
-  <h1>GenAI Studio Preview Tool</h1>
-  <p><strong>Preview AI Studio prototypes locally. Mock GenAI SDK, local LLMs, and mobile testing.</strong></p>
+**Preview AI Studio prototypes locally. Mock GenAI SDK, local LLMs, and mobile testing.**
 
-  [![Version](https://img.shields.io/visual-studio-marketplace/v/carlosfundora.genai-studio-preview?style=flat-square&color=007acc)](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview)
-  [![Installs](https://img.shields.io/visual-studio-marketplace/i/carlosfundora.genai-studio-preview?style=flat-square&color=green)](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview)
-  [![License](https://img.shields.io/github/license/carlosfundora/genai-studio-preview?style=flat-square&color=blue)](LICENSE)
-</div>
+![Version](https://img.shields.io/badge/version-1.3.0-007acc?style=flat-square)
+![License](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue?style=flat-square)
 
 ---
 
@@ -28,15 +23,22 @@
 
 ## Installation
 
-Launch VS Code Quick Open (`Ctrl+P`), paste the following command, and press enter:
+### VS Code / Antigravity
+
+Download the latest `.vsix` from [Releases](https://github.com/carlosfundora/genai-studio-preview/releases) and install:
 
 ```bash
-ext install carlosfundora.genai-studio-preview
+code --install-extension genai-studio-preview-1.3.0.vsix
 ```
+
+Or install via Command Palette (`Ctrl+Shift+P`):
+
+> `Extensions: Install from VSIX...`
 
 ## Quick Start
 
 ### 1. Launch a Preview
+
 You can launch a preview directly from your project folder:
 
 ```bash
@@ -45,17 +47,19 @@ npx genai-studio-preview
 ```
 
 or via the **Command Palette** (`Ctrl+Shift+P`):
+
 > `GenAI Studio: Add Project`
 
 ### 2. Configure Local AI (Optional)
+
 To use a local LLM like Llama 3 or Qwen 2.5:
 
-1.  **Install Ollama**: [https://ollama.com](https://ollama.com)
-2.  **Pull a Model**: `ollama pull qwen2.5:1.5b`
-3.  **Configure**:
-    -   Click the **Gear Icon** ⚙️ in the GenAI sidebar.
-    -   Set **AI Mode** to `local`.
-    -   Set **Model** to `qwen2.5:1.5b`.
+1. **Install Ollama**: [https://ollama.com](https://ollama.com)
+2. **Pull a Model**: `ollama pull qwen2.5:1.5b`
+3. **Configure**:
+   - Click the **Gear Icon** ⚙️ in the GenAI sidebar.
+   - Set **AI Mode** to `local`.
+   - Set **Model** to `qwen2.5:1.5b`.
 
 ## Resources
 
@@ -93,6 +97,3 @@ docker-compose --profile cpu up
 # GPU (NVIDIA)
 docker-compose --profile gpu up
 ```
-
----
-**Enjoying the tool?** Don't forget to [rate it ⭐⭐⭐⭐⭐](https://marketplace.visualstudio.com/items?itemName=carlosfundora.genai-studio-preview) on the Marketplace!
