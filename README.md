@@ -57,6 +57,7 @@ docker-compose --profile gpu up
 ```
 
 **Services**:
+
 - `preview-launcher`: Runs the preview server (ports 4000-4010)
 - `ai-backend` / `ai-backend-gpu`: Ollama with `qwen2.5:1.5b` and `nomic-embed-text`
 

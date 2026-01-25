@@ -60,20 +60,25 @@ export function activate(context: vscode.ExtensionContext) {
       activeWebviewProvider.refresh();
     };
 
-    // Status change listener
+    // Create status bar ONCE (fixed memory leak - was creating new item on every status change)
+    const statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      100,
+    );
+    statusBarItem.text = "$(beaker) GenAI";
+    statusBarItem.tooltip = "GenAI Studio Preview";
+    statusBarItem.command = "genai-active.focus";
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+
+    // Status change listener - now updates existing status bar item
     previewManager.onStatusChange((status) => {
-      // Update status bar
-      const statusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        100,
-      );
       statusBarItem.text = status.running
         ? `$(beaker) GenAI: ${status.count}`
         : "$(beaker) GenAI";
       statusBarItem.backgroundColor = status.running
         ? new vscode.ThemeColor("statusBarItem.warningBackground")
         : undefined;
-      statusBarItem.show();
 
       refreshAll();
     });

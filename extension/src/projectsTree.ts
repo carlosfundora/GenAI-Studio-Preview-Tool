@@ -130,8 +130,33 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
   }
 
   async addProject(name: string, projectPath: string): Promise<void> {
-    // 1. Validation: Check for package.json
-    const packageJsonPath = vscode.Uri.file(projectPath + "/package.json");
+    // 1. Security: Validate path is absolute and doesn't contain traversal
+    const normalizedPath = require("path").normalize(projectPath);
+    if (normalizedPath !== projectPath || projectPath.includes("..")) {
+      vscode.window.showErrorMessage(
+        "Invalid project path: Path contains unsafe characters.",
+      );
+      return;
+    }
+
+    // 2. Security: Ensure path is within user workspace or home directory
+    const homedir = require("os").homedir();
+    const workspaceFolders =
+      vscode.workspace.workspaceFolders?.map((f) => f.uri.fsPath) || [];
+    const allowedRoots = [homedir, ...workspaceFolders];
+
+    const isAllowed = allowedRoots.some((root) =>
+      normalizedPath.startsWith(root),
+    );
+    if (!isAllowed) {
+      vscode.window.showErrorMessage(
+        "Invalid project path: Path must be within your home directory or workspace.",
+      );
+      return;
+    }
+
+    // 3. Validation: Check for package.json
+    const packageJsonPath = vscode.Uri.file(normalizedPath + "/package.json");
     try {
       await vscode.workspace.fs.stat(packageJsonPath);
     } catch {
@@ -141,7 +166,7 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
       return;
     }
 
-    if (this.projects.some((p) => p.path === projectPath)) {
+    if (this.projects.some((p) => p.path === normalizedPath)) {
       vscode.window.showWarningMessage("Project already added.");
       return;
     }
@@ -152,7 +177,7 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
 
     this.projects.push({
       name,
-      path: projectPath,
+      path: normalizedPath,
       isFavorite: false,
       lastUsed: Date.now(),
       config: { ...DEFAULT_CONFIG, port },

@@ -76,6 +76,31 @@ services:
     profiles:
       - gpu
 
+  # === AI Backend (GPU - AMD ROCm) ===
+  # For AMD GPUs like RX 6700 XT, RX 7000 series, etc.
+  ai-backend-amd:
+    image: ollama/ollama:rocm
+    container_name: genai-ai-backend-amd
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0 # RX 6700 XT = gfx1031, use 10.3.0
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+      - render
+    entrypoint: >
+      sh -c "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && ollama pull nomic-embed-text && wait"
+    networks:
+      - genai-preview-net
+    profiles:
+      - amd
+
 networks:
   genai-preview-net:
     driver: bridge
