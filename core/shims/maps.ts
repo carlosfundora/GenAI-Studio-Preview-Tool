@@ -12,9 +12,30 @@
 // Note: This is a client-side shim that will be injected into the browser
 // It requires Leaflet to be loaded first
 
+// Minimal Leaflet types for internal use
+interface LeafletMap {
+  setView(center: [number, number], zoom: number): LeafletMap;
+  setZoom(zoom: number): LeafletMap;
+  getCenter(): { lat: number; lng: number };
+  getZoom(): number;
+  panTo(center: [number, number]): LeafletMap;
+  addTo(map: LeafletMap): void;
+}
+
+interface LeafletMarker {
+  addTo(map: LeafletMap): void;
+  remove(): void;
+  setLatLng(latlng: [number, number]): void;
+  getLatLng(): { lat: number; lng: number };
+}
+
 declare global {
   interface Window {
-    L: any; // Leaflet
+    L: {
+      map(element: HTMLElement): LeafletMap;
+      marker(latlng: [number, number]): LeafletMarker;
+      tileLayer(url: string, options?: any): { addTo(map: LeafletMap): void };
+    };
     google: {
       maps: any;
     };
@@ -25,7 +46,7 @@ declare global {
  * Leaflet-backed Map class that mimics google.maps.Map
  */
 class LeafletMapWrapper {
-  private map: any;
+  private map: LeafletMap;
   private container: HTMLElement;
 
   constructor(container: HTMLElement, options?: any) {
@@ -54,7 +75,7 @@ class LeafletMapWrapper {
   setCenter(latLng: { lat: number; lng: number } | any): void {
     const lat = typeof latLng.lat === "function" ? latLng.lat() : latLng.lat;
     const lng = typeof latLng.lng === "function" ? latLng.lng() : latLng.lng;
-    this.map.setView([lat, lng]);
+    this.map.setView([lat, lng], this.map.getZoom());
   }
 
   setZoom(zoom: number): void {
@@ -78,7 +99,7 @@ class LeafletMapWrapper {
   }
 
   // Return underlying Leaflet map for advanced usage
-  getLeafletMap(): any {
+  getLeafletMap(): LeafletMap {
     return this.map;
   }
 }
@@ -87,7 +108,7 @@ class LeafletMapWrapper {
  * Leaflet-backed Marker class
  */
 class LeafletMarkerWrapper {
-  private marker: any;
+  private marker: LeafletMarker;
 
   constructor(options?: {
     position?: { lat: number; lng: number };

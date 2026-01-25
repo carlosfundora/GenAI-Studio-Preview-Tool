@@ -89,10 +89,13 @@ async function prepareDependencies(version: VersionInfo) {
     );
 
     return new Promise<void>((resolve, reject) => {
-      const p = spawn("pnpm", ["install"], {
+      const isWin = process.platform === "win32";
+      const cmd = isWin ? "pnpm.cmd" : "pnpm";
+
+      const p = spawn(cmd, ["install"], {
         cwd: version.path,
         stdio: "inherit",
-        shell: true,
+        shell: false, // Security hardening: disable shell execution
       });
 
       p.on("close", (code) => {

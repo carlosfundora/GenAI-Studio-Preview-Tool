@@ -191,13 +191,20 @@ class GenerativeModel {
         const data = await res.json();
 
         // Check for tool calls
+        interface OpenAIResponseToolCall {
+          function: {
+            name: string;
+            arguments: string;
+          };
+        }
+
         const toolCalls = data.choices?.[0]?.message?.tool_calls;
         if (toolCalls && toolCalls.length > 0) {
           return {
             response: {
               text: () => "",
               functionCalls: () =>
-                toolCalls.map((tc: any) => ({
+                toolCalls.map((tc: OpenAIResponseToolCall) => ({
                   name: tc.function.name,
                   args: JSON.parse(tc.function.arguments || "{}"),
                 })),

@@ -64,12 +64,14 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
         }),
       );
 
+      const nonce = this.getNonce();
+
       this._view.webview.html = `
         <!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8">
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src data:;">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             ${this.getStyles()}
@@ -77,7 +79,7 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
         </head>
         <body>
           ${previewsHtml.length > 0 ? previewsHtml.join("") : '<div class="empty">No active previews</div>'}
-          <script>
+          <script nonce="${nonce}">
             const vscode = acquireVsCodeApi();
             function stop(path) {
               vscode.postMessage({ type: 'stop', path });
@@ -116,6 +118,17 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
     }
     return undefined;
   }
+
+  private getNonce() {
+    let text = "";
+    const possible =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < 32; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+  }
+
   private getStyles(): string {
     return `
       body {
