@@ -12,7 +12,7 @@ All notable changes to GenAI Studio Preview Tool will be documented in this file
 
 ## [1.2.2] - 2026-01-25
 
-### Fixes
+### Critical Fixes
 
 - **Black Screen Bug**: Fixed critical issue where the preview would display a black screen instead of the app. The root cause was a CJS/ESM module mismatch—browser-facing mocks were being resolved to CommonJS-compiled `.js` files, but browsers require ESM. Now correctly resolves to TypeScript source files which Vite transpiles to ESM on the fly.
 
