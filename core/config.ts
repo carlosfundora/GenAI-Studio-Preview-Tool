@@ -39,6 +39,7 @@ export interface LocationConfig {
 export interface GenAIPreviewConfig {
   scanPaths: string[];
   externalProjects: string[];
+  entryPoint?: string;
   port: number;
   ai: AIBackendConfig;
   location: LocationConfig;
@@ -53,6 +54,7 @@ export interface GenAIPreviewConfig {
 const DEFAULT_CONFIG: GenAIPreviewConfig = {
   scanPaths: [".versions/legacy", ".versions/feature"],
   externalProjects: [],
+  entryPoint: "",
   port: 4000,
   ai: {
     mode: "mock",
@@ -113,6 +115,9 @@ export function loadConfig(projectPath?: string): GenAIPreviewConfig {
   // 3. Override with environment variables
   if (process.env.GENAI_ENDPOINT) {
     config.ai.endpoint = process.env.GENAI_ENDPOINT;
+  }
+  if (process.env.GENAI_ENTRYPOINT) {
+    config.entryPoint = process.env.GENAI_ENTRYPOINT;
   }
   if (process.env.GENAI_MODE) {
     config.ai.mode = process.env.GENAI_MODE as "mock" | "local" | "remote";

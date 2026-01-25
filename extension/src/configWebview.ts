@@ -218,6 +218,12 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
           </div>
         </div>
 
+        <div class="field">
+          <label>Entry Point</label>
+          <input type="text" id="entryPoint" value="${config.entryPoint}" placeholder="e.g. TestApp.tsx">
+          <div class="help-text">Leave blank to use default (index.tsx)</div>
+        </div>
+
         <div class="field checkbox-field">
           <input type="checkbox" id="autoOpen" ${config.autoOpen ? "checked" : ""}>
           <div class="checkbox-label">
@@ -252,6 +258,7 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
                 aiMode: document.getElementById('aiMode').value,
                 aiEndpoint: document.getElementById('aiEndpoint').value,
                 aiModel: document.getElementById('aiModel').value,
+                entryPoint: document.getElementById('entryPoint').value,
                 autoOpen: document.getElementById('autoOpen').checked,
                 hotReload: document.getElementById('hotReload').checked,
               }

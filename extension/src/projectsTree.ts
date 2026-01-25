@@ -20,6 +20,7 @@ export interface ProjectConfig {
   aiMode: "mock" | "local";
   aiEndpoint: string;
   aiModel: string;
+  entryPoint: string;
   autoOpen: boolean;
   hotReload: boolean;
 }
@@ -29,6 +30,7 @@ const DEFAULT_CONFIG: ProjectConfig = {
   aiMode: "mock",
   aiEndpoint: "http://localhost:11434/v1",
   aiModel: "LFM2.5-1.2B-Instruct",
+  entryPoint: "",
   autoOpen: true,
   hotReload: true,
 };

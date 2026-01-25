@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Plugin, ViteDevServer } from "vite";
 import { loadConfig } from "./config.js";
 
-// @ts-ignore
+// @ts-ignore - eval hides import.meta from TS when compiling to CommonJS
 const _dirname =
     typeof __dirname !== "undefined"
         ? __dirname
@@ -17,7 +17,10 @@ const _dirname =
 function resolveInternalPath(subPath: string) {
     const fullPath = path.resolve(_dirname, subPath);
     // If running from dist/ or the TS file doesn't exist, try the JS counterpart
-    if (fullPath.endsWith(".ts") && (_dirname.includes("dist") || !fs.existsSync(fullPath))) {
+    if (
+        fullPath.endsWith(".ts") &&
+        (_dirname.includes("dist") || !fs.existsSync(fullPath))
+    ) {
         const jsPath = fullPath.replace(/\.ts$/, ".js");
         if (fs.existsSync(jsPath)) return jsPath;
     }
@@ -29,7 +32,9 @@ function resolveInternalPath(subPath: string) {
  */
 export const CORE_CONFIG = {
     MOCK_GENAI_PATH: resolveInternalPath("./mocks/genai.ts"),
-    SHARED_STYLES_PATH: resolveInternalPath("./assets/shared-module-styles.css"),
+    SHARED_STYLES_PATH: resolveInternalPath(
+        "./assets/shared-module-styles.css",
+    ),
     GEOLOCATION_SHIM_PATH: resolveInternalPath("./shims/geolocation.ts"),
     MAPS_SHIM_PATH: resolveInternalPath("./shims/maps.ts"),
 };
@@ -145,19 +150,27 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                 );
             }
 
-            // 6. Inject entry point if missing
-            const possibleEntries = [
-                "index.tsx",
-                "src/main.tsx",
-                "src/index.tsx",
-                "main.tsx",
-            ];
-            let entryPoint = "";
-            for (const entry of possibleEntries) {
-                if (fs.existsSync(path.join(projectPath, entry))) {
-                    entryPoint = "/" + entry;
-                    break;
-                }
+            // 6. Inject entry point
+            let entryPoint = config.entryPoint || "";
+
+            if (!entryPoint) {
+              const possibleEntries = [
+                  "index.tsx",
+                  "src/main.tsx",
+                  "src/index.tsx",
+                  "main.tsx",
+              ];
+              for (const entry of possibleEntries) {
+                  if (fs.existsSync(path.join(projectPath, entry))) {
+                      entryPoint = "/" + entry;
+                      break;
+                  }
+              }
+            } else {
+              // Ensure entryPoint starts with /
+              if (!entryPoint.startsWith("/")) {
+                entryPoint = "/" + entryPoint;
+              }
             }
 
             if (entryPoint && !newHtml.includes(entryPoint)) {

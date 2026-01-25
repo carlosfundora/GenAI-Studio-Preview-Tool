@@ -84,6 +84,7 @@ export class PreviewManager {
         GENAI_MODE: config.aiMode,
         GENAI_ENDPOINT: config.aiEndpoint,
         GENAI_MODEL: config.aiModel,
+        GENAI_ENTRYPOINT: config.entryPoint,
         GENAI_PORT: port.toString(),
       };
 

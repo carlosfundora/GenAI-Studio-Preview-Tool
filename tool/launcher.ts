@@ -62,12 +62,12 @@ async function scanForVersions(rootDir: string): Promise<VersionInfo[]> {
     });
   }
 
-  // 3. Scan root Projects for RECENTLY-DECEASED or other test cases (External)
-  const projectsRoot = path.resolve(__dirname, "../../..");
-  const externalRepo = path.join(projectsRoot, "RECENTLY-DECEASED");
+  // 3. Scan root Projects for Recently-Deceased or other test cases (External)
+  const projectsRoot = path.resolve(rootDir, "..");
+  const externalRepo = path.join(projectsRoot, "Recently-Deceased");
   if (fs.existsSync(path.join(externalRepo, "package.json"))) {
     versions.push({
-      name: `External: RECENTLY-DECEASED`,
+      name: `External: Recently-Deceased`,
       path: externalRepo,
       type: "external",
     });
@@ -191,7 +191,8 @@ async function main() {
     process.exit(1);
   }
 
-  const projectsRoot = path.resolve(__dirname, "../../..");
+  const toolRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const projectsRoot = path.resolve(toolRoot, "..");
   const exhibitronRoot = path.join(projectsRoot, "EXHIBITRON");
 
   console.log(chalk.gray(`Scanning ${exhibitronRoot} and ${projectsRoot}...`));
