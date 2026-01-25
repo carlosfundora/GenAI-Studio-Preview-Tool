@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { Plugin, ViteDevServer } from "vite";
 import { loadConfig } from "./config.js";
 
+// @ts-ignore
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**

@@ -3,6 +3,7 @@
  */
 
 import { ChildProcess, spawn } from "child_process";
+import * as path from "path";
 import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import { StoredProject } from "./projectsTree";
@@ -86,17 +87,26 @@ export class PreviewManager {
         GENAI_PORT: port.toString(),
       };
 
+      const serverEntry = path.join(
+        this.context.extensionPath,
+        "dist",
+        "extension",
+        "src",
+        "server-entry.js",
+      );
+
       const proc = spawn(
-        "npx",
-        ["vite", "--port", port.toString(), "--strictPort", "--host"],
+        "node",
+        [serverEntry, "--project", project.path, "--port", port.toString()],
         {
           cwd: project.path,
           env,
-          shell: true,
+          stdio: ["pipe", "pipe", "pipe", "ipc"],
         },
       );
 
-      const url = `http://localhost:${port}`;
+      // Default URL until updated by server
+      let url = `http://localhost:${port}`;
 
       this.previews.set(project.path, {
         project,
@@ -111,6 +121,29 @@ export class PreviewManager {
       proc.stderr?.on("data", (data) =>
         this.outputChannel.append(data.toString()),
       );
+
+      proc.on("message", (msg: any) => {
+        if (msg && msg.type === "genai:ready") {
+          url = msg.url;
+          const instance = this.previews.get(project.path);
+          if (instance) {
+            instance.url = url;
+            this.notifyStatusChange(); // Update UI with correct URL
+
+            vscode.window
+              .showInformationMessage(`Running at ${url}`, "Open")
+              .then((action) => {
+                if (action) vscode.env.openExternal(vscode.Uri.parse(url));
+              });
+
+            if (config.autoOpen) {
+              vscode.env.openExternal(vscode.Uri.parse(url));
+            }
+          }
+        } else if (msg && msg.type === "genai:error") {
+          vscode.window.showErrorMessage(`Server Error: ${msg.message}`);
+        }
+      });
 
       proc.on("close", (code) => {
         this.outputChannel.appendLine(
@@ -127,18 +160,7 @@ export class PreviewManager {
         this.notifyStatusChange();
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       this.notifyStatusChange();
-
-      if (config.autoOpen) {
-        vscode.env.openExternal(vscode.Uri.parse(url));
-      }
-
-      vscode.window
-        .showInformationMessage(`Running at ${url}`, "Open")
-        .then((action) => {
-          if (action) vscode.env.openExternal(vscode.Uri.parse(url));
-        });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.outputChannel.appendLine(`Error: ${message}`);
