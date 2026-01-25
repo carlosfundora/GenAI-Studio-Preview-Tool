@@ -1,5 +1,4 @@
 import chalk from "chalk";
-import { glob } from "glob";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,70 +10,11 @@ import { createServer } from "vite";
 
 // --- Modular Imports ---
 import { CORE_CONFIG, GenAIPreviewPlugin } from "../core/engine.js";
+import { scanForVersions, VersionInfo } from "./scanner.js";
 
 // --- Configuration ---
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PREVIEW_PORT_START = 4000;
-
-type VersionInfo = {
-  name: string;
-  path: string;
-  type: "legacy" | "feature" | "external";
-};
-
-/**
- * Scans a directory for valid Vite projects (containing package.json)
- */
-async function scanForVersions(rootDir: string): Promise<VersionInfo[]> {
-  const versions: VersionInfo[] = [];
-
-  // 1. Scan .versions/legacy
-  const legacyDir = path.join(rootDir, ".versions/legacy");
-  if (fs.existsSync(legacyDir)) {
-    const folders = (
-      await glob("*", { cwd: legacyDir, withFileTypes: true })
-    ).filter((dirent) => dirent.isDirectory());
-    folders.forEach((folder) => {
-      if (fs.existsSync(path.join(legacyDir, folder.name, "package.json"))) {
-        versions.push({
-          name: `Legacy: ${folder.name}`,
-          path: path.join(legacyDir, folder.name),
-          type: "legacy",
-        });
-      }
-    });
-  }
-
-  // 2. Scan .versions/feature
-  const featureDir = path.join(rootDir, ".versions/feature");
-  if (fs.existsSync(featureDir)) {
-    const folders = (
-      await glob("*", { cwd: featureDir, withFileTypes: true })
-    ).filter((dirent) => dirent.isDirectory());
-    folders.forEach((folder) => {
-      if (fs.existsSync(path.join(featureDir, folder.name, "package.json"))) {
-        versions.push({
-          name: `Feature: ${folder.name}`,
-          path: path.join(featureDir, folder.name),
-          type: "feature",
-        });
-      }
-    });
-  }
-
-  // 3. Scan root Projects for RECENTLY-DECEASED or other test cases (External)
-  const projectsRoot = path.resolve(__dirname, "../../..");
-  const externalRepo = path.join(projectsRoot, "RECENTLY-DECEASED");
-  if (fs.existsSync(path.join(externalRepo, "package.json"))) {
-    versions.push({
-      name: `External: RECENTLY-DECEASED`,
-      path: externalRepo,
-      type: "external",
-    });
-  }
-
-  return versions;
-}
 
 /**
  * Checks and installs dependencies if needed
