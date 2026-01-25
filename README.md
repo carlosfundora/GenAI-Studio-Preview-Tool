@@ -37,16 +37,23 @@ docker compose up --build
 ```
 The preview servers will be accessible on ports `4000-4010`.
 
+## 📂 Project Structure
+
+- `core/`: Shared engine and Vite plugins. Contains the GenAI mocks.
+- `extension/`: Space for future IDE (VS Code, etc.) extension code.
+- `tool/`: The script-based developer tool for local previews.
+- `docker/`: Centralized Docker and Docker Compose assets.
+
 ## 🧠 How it Works
-GenAI Studio Preview intercepts the build process using a custom Vite plugin. It programmatically:
-1. Aliases AI-specific libraries to local mocks.
+GenAI Studio Preview intercepts the build process using the **GenAIPreviewPlugin** (located in `core/`). It programmatically:
+1. Aliases AI-specific libraries (like `@google/genai`) to local mocks.
 2. Strips brittle integrity checks and hardcoded CDN importmaps.
 3. Automatically resolves and injects necessary entry points.
 
 ## 🗺️ Roadmap
-- [ ] VS Code Extension wrapper
-- [ ] Support for additional AI framework mocks
-- [ ] Automatic repository discovery across multiple paths
+- [ ] **VS Code Extension**: Direct integration into the IDE for seamless prototypying.
+- [ ] **Advanced Mocking**: Support for additional AI framework mocks (OpenAI, LangChain).
+- [ ] **Auto-Discovery**: Improved repository scanning across nested workspaces.
 
 ---
 

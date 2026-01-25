@@ -6,13 +6,12 @@ services:
     volumes:
       # Mount the entire Projects directory
       - ../../../:/app/Projects
-    # Set the working directory to the launcher within the mounted project
-    working_dir: /app/Projects/.dev-tools/version-launcher
+    # Set the working directory to the tool within the mounted project
+    working_dir: /app/Projects/.extensions/genai-studio-preview
     ports:
       - "4000-4010:4000-4010"
     environment:
       - NODE_ENV=development
-    # We use stdin_open and tty to allow interactive prompts if run via 'docker-compose run'
     stdin_open: true
     tty: true
     command: pnpm run preview

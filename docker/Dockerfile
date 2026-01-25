@@ -1,4 +1,4 @@
-# Lightweight Dockerfile for Exhibitron Version Preview System
+# Lightweight Dockerfile for GenAI Studio Preview
 FROM node:24-slim
 
 # Install pnpm and tsx globally
@@ -8,16 +8,11 @@ RUN npm install -g pnpm tsx
 WORKDIR /app
 
 # We expect the Projects directory to be mounted at /app/Projects
-# The launcher will run from /app/Projects/.dev-tools/version-launcher/
-
 # Pre-install dependencies for the launcher itself
-COPY package.json .
-RUN pnpm install
+# (In a real open source repo, we might copy the whole tool but here we mount)
 
 # Expose ports for Vite preview servers
 EXPOSE 4000-4010
 
 # Default command: launch the preview system
-# We run it in non-interactive mode if --target is provided, or interactive if not.
-# Users can override this in docker-compose
 CMD ["pnpm", "run", "preview"]

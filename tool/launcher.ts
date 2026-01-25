@@ -3,16 +3,17 @@ import { glob } from "glob";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import portfinder from "portfinder";
 import prompts from "prompts";
 import { createServer } from "vite";
 
-import { fileURLToPath } from "node:url";
+// --- Modular Imports ---
+import { CORE_CONFIG, GenAIPreviewPlugin } from "../core/engine.js";
 
 // --- Configuration ---
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PREVIEW_PORT_START = 4000;
-const MOCK_GENAI_PATH = path.resolve(__dirname, "./mocks/genai.ts");
 
 type VersionInfo = {
   name: string;
@@ -57,13 +58,7 @@ async function scanForVersions(rootDir: string): Promise<VersionInfo[]> {
   }
 
   // 3. Scan root Projects for RECENTLY-DECEASED or other test cases (External)
-  // This supports the user's request to test with external repos in Projects/
-  const projectsRoot = path.dirname(rootDir); // Assuming rootDir is Projects/EXHIBITRON, go up to Projects/
-  // Actually, let's just check specific known external test structures if the user passed a different root
-  // Or check specific folders in Projects/
-
-  // For the specific request: "ADD IT TO OUR PROJECTS FOLDER"
-  // We'll scan relative to the script execution or provided arg, but let's hardcode a check for now based on the plan
+  const projectsRoot = path.resolve(__dirname, "../../..");
   const externalRepo = path.join(projectsRoot, "RECENTLY-DECEASED");
   if (fs.existsSync(path.join(externalRepo, "package.json"))) {
     versions.push({
@@ -88,12 +83,8 @@ async function prepareDependencies(version: VersionInfo) {
       ),
     );
 
-    // Prefer pnpm if available, else npm
-    const cmd = "pnpm";
-    // Simplified assumption for this suite. Real world might check `which pnpm`.
-
     return new Promise<void>((resolve, reject) => {
-      const p = spawn(cmd, ["install"], {
+      const p = spawn("pnpm", ["install"], {
         cwd: version.path,
         stdio: "inherit",
         shell: true,
@@ -112,7 +103,7 @@ async function prepareDependencies(version: VersionInfo) {
 }
 
 /**
- * Launches the Vite server with injected configuration
+ * Launches the Vite server with core engine injection
  */
 async function launchVersion(version: VersionInfo) {
   console.log(chalk.cyan(`\n🚀 Launching ${version.name}...`));
@@ -120,74 +111,31 @@ async function launchVersion(version: VersionInfo) {
   portfinder.basePort = PREVIEW_PORT_START;
   const port = await portfinder.getPortPromise();
 
-  // We use Vite's JavaScript API to start a server with inline config override
-  // This allows us to inject the alias WITHOUT modifying the user's vite.config.ts
   const server = await createServer({
-    configFile: path.join(version.path, "vite.config.ts"), // Use their config as base
+    configFile: path.join(version.path, "vite.config.ts"),
     root: version.path,
     server: {
       port: port,
       strictPort: true,
-      open: false, // We will open it manually with a small delay for better reliability
+      open: false,
     },
     plugins: [
-      {
-        name: "html-transform",
-        transformIndexHtml(html) {
-          // 1. Remove importmap to force usage of local node_modules
-          let newHtml = html.replace(
-            /<script type="importmap">[\s\S]*?<\/script>/gi,
-            "",
-          );
-
-          // 2. Remove integrity attributes to avoid hash mismatches on external CDNs
-          newHtml = newHtml.replace(/\s+integrity="[^"]*"/gi, "");
-
-          // 3. Inject entry point if missing
-          const possibleEntries = [
-            "index.tsx",
-            "src/main.tsx",
-            "src/index.tsx",
-            "main.tsx",
-          ];
-          let entryPoint = "";
-          for (const entry of possibleEntries) {
-            if (fs.existsSync(path.join(version.path, entry))) {
-              entryPoint = "/" + entry;
-              break;
-            }
-          }
-
-          if (entryPoint && !newHtml.includes(entryPoint)) {
-            // Inject before closing body tag
-            newHtml = newHtml.replace(
-              "</body>",
-              `<script type="module" src="${entryPoint}"></script>\n</body>`,
-            );
-          }
-
-          return newHtml;
-        },
-      },
+      GenAIPreviewPlugin(version.path), // Use core plugin
     ],
     resolve: {
       alias: {
-        // OVERRIDE: Redirect @google/genai to our local mock
-        "@google/genai": MOCK_GENAI_PATH,
+        "@google/genai": CORE_CONFIG.MOCK_GENAI_PATH, // Use core mock path
       },
     },
-    // Force dependency optimization to ensure local packages are used
     optimizeDeps: {
       include: ["react", "react-dom"],
     },
   });
 
   await server.listen();
-
   server.printUrls();
   console.log(chalk.gray(`   (Mock GenAI Active)`));
 
-  // Delay browser open slightly to ensure terminal output is seen and server is stable
   setTimeout(() => {
     server.openBrowser();
   }, 500);
@@ -195,12 +143,9 @@ async function launchVersion(version: VersionInfo) {
   return { server, port };
 }
 
-// --- Main Execution ---
-
 async function main() {
   console.log(chalk.bold.blue("=== GenAI Studio Preview ===\n"));
 
-  // --- Environment Check ---
   const majorVersion = parseInt(process.version.slice(1).split(".")[0]);
   if (majorVersion < 18) {
     console.error(
@@ -211,30 +156,13 @@ async function main() {
     console.error(
       chalk.yellow(`Please use Node.js v18 or higher (v24 recommended).`),
     );
-    console.error(
-      chalk.gray(
-        `If you just updated your .bashrc, please restart your terminal or run 'source ~/.bashrc'.`,
-      ),
-    );
     process.exit(1);
   }
 
-  // Debug info
-  console.log(chalk.gray(`Running on Node ${process.version}`));
-
-  // Default to scanning scan relative to script location?
-  // The user wants to run this from EXHIBITRON folder usually, pointing to ../.dev-tools...
-  // Let's assume the target root is passed as arg, or default to current cwd.
-  // Ideally we find the PROJECTS root.
-
-  // If run from Projects/.dev-tools/version-launcher/launch-preview.ts
-  // The 'projects root' is ../..
-  const projectsRoot = path.resolve(__dirname, "../../");
-  // The EXHIBITRON root is likely Projects/EXHIBITRON
+  const projectsRoot = path.resolve(__dirname, "../../..");
   const exhibitronRoot = path.join(projectsRoot, "EXHIBITRON");
 
   console.log(chalk.gray(`Scanning ${exhibitronRoot} and ${projectsRoot}...`));
-
   const versions = await scanForVersions(exhibitronRoot);
 
   if (versions.length === 0) {
@@ -242,7 +170,6 @@ async function main() {
     return;
   }
 
-  // Check for CLI args (e.g. --target "Legacy: EXHIBITRON-Z")
   const targetArgIndex = process.argv.indexOf("--target");
   let selectedVersions: VersionInfo[] = [];
 
@@ -269,7 +196,6 @@ async function main() {
       console.log("Operation cancelled.");
       return;
     }
-
     selectedVersions = response.selected;
   }
 
@@ -287,8 +213,6 @@ async function main() {
       "\n✨ All selected versions are running. Press Ctrl+C to stop.",
     ),
   );
-
-  // Keep process alive
   await new Promise(() => {});
 }
 

@@ -5,7 +5,7 @@
   "main": "launch-preview.ts",
   "type": "module",
   "scripts": {
-    "preview": "tsx launch-preview.ts"
+    "preview": "tsx tool/launcher.ts"
   },
   "keywords": [
     "ai-studio",
