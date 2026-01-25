@@ -73,13 +73,18 @@ class ActiveWebviewProvider {
               ${networkUrl
                     ? `
                 <div class="qr-section">
-                  <img src="${qrCodeData}" class="qr-code" />
+                  <img src="${qrCodeData}" class="qr-code" alt="QR Code for ${p.name}" />
                   <div class="scan-text">Scan for Mobile</div>
                 </div>
               `
                     : ""}
               <div class="actions">
-                <button onclick="stop('${p.path}')">Stop</button>
+                <button
+                  onclick="stop('${p.path}', this)"
+                  aria-label="Stop project ${p.name}"
+                >
+                  Stop
+                </button>
               </div>
             </div>
           `;
@@ -99,7 +104,13 @@ class ActiveWebviewProvider {
           ${previewsHtml.length > 0 ? previewsHtml.join("") : '<div class="empty">No active previews</div>'}
           <script>
             const vscode = acquireVsCodeApi();
-            function stop(path) {
+            function stop(path, btn) {
+              if (btn) {
+                btn.textContent = 'Stopping...';
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'wait';
+              }
               vscode.postMessage({ type: 'stop', path });
             }
           </script>
