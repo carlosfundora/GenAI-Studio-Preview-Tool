@@ -78,7 +78,7 @@
         {
           "id": "genai-preview",
           "title": "GenAI Studio Preview",
-          "icon": "$(lightbulb-sparkle)"
+          "icon": "$(mirror)"
         }
       ]
     },
