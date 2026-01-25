@@ -2,7 +2,7 @@
   "name": "genai-studio-preview",
   "displayName": "GenAI Studio Preview Tool",
   "description": "Preview AI Studio prototypes locally with zero modifications. Mocks GenAI SDK, supports local LLMs, and enables mobile testing via QR codes.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "icon": "assets/extension-icon.svg",
   "galleryBanner": {
     "color": "#2b2d3e",
