@@ -86,6 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshAll = () => {
     favoritesProvider.refresh();
     recentsProvider.refresh();
+    projectsTreeProvider.refresh(); // Crucial: Update the provider used by config panel
     activeWebviewProvider.refresh();
   };
 

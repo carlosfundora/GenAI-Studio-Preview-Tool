@@ -86,6 +86,7 @@ function activate(context) {
     const refreshAll = () => {
         favoritesProvider.refresh();
         recentsProvider.refresh();
+        projectsTreeProvider.refresh(); // Crucial: Update the provider used by config panel
         activeWebviewProvider.refresh();
     };
     // Status change listener
