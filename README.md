@@ -5,11 +5,14 @@ Preview AI Studio prototypes locally with zero modifications. Mocks the GenAI SD
 ## Features
 
 - **Zero-Config Preview**: Just run and your AI Studio app works
+- **Mobile Testing**: **QR Code** in sidebar for instant phone access
+- **4-Panel Sidebar**:
+  - ✨ **Active**: Live previews with QR codes
+  - ⭐ **Favorites**: Pinned projects
+  - 🕒 **Recents**: History
+  - ⚙️ **Config**: Per-project settings (Port, AI Mode, Model)
 - **GenAI SDK Mock**: Full enum support, streaming, tool calls, embeddings
 - **Local AI Support**: Route to Ollama, LFM, or any OpenAI-compatible endpoint
-- **Mobile Testing**: QR code in terminal for instant phone access
-- **IDE Extension**: VS Code sidebar with project discovery
-- **Docker Ready**: CPU/GPU profiles with Ollama backend
 
 ## Quick Start
 
