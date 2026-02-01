@@ -10,7 +10,9 @@
 services:
     # === Preview Launcher ===
     preview-launcher:
-        build: .
+        build:
+            context: ..
+            dockerfile: Dockerfile
         image: genai-studio-preview
         container_name: genai-studio-preview
         volumes:
