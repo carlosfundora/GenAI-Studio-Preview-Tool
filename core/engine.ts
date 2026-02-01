@@ -131,7 +131,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             return null;
         },
 
-        transformIndexHtml(html: string) {
+        async transformIndexHtml(html: string) {
             let newHtml = html;
 
             // 1. Remove importmap to force usage of local node_modules
@@ -200,11 +200,24 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                     "src/index.tsx",
                     "main.tsx",
                 ];
-                for (const entry of possibleEntries) {
-                    if (fs.existsSync(path.join(projectPath, entry))) {
-                        entryPoint = "/" + entry;
-                        break;
-                    }
+
+                // Check for entry points in parallel to avoid blocking
+                const results = await Promise.all(
+                    possibleEntries.map(async (entry) => {
+                        try {
+                            await fs.promises.access(
+                                path.join(projectPath, entry),
+                            );
+                            return entry;
+                        } catch {
+                            return null;
+                        }
+                    }),
+                );
+
+                const found = results.find((entry) => entry !== null);
+                if (found) {
+                    entryPoint = "/" + found;
                 }
             } else {
                 // Ensure entryPoint starts with /

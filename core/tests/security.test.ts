@@ -15,7 +15,7 @@ describe('Security: GenAIPreviewPlugin', () => {
     vi.resetAllMocks();
   });
 
-  it('should escape malicious script tags in injected configuration', () => {
+  it('should escape malicious script tags in injected configuration', async () => {
     const maliciousConfig = {
       scanPaths: [],
       externalProjects: [],
@@ -40,7 +40,7 @@ describe('Security: GenAIPreviewPlugin', () => {
     expect(transformIndexHtml).toBeDefined();
 
     const html = '<html><head></head><body></body></html>';
-    const result = transformIndexHtml(html);
+    const result = await transformIndexHtml(html);
 
     // Check for safe escaping
     expect(result).not.toContain('</script><script>alert("XSS")</script>');
