@@ -192,13 +192,13 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
         <h3>${name}</h3>
 
         <div class="field">
-          <label for="port">Preview Port</label>
-          <input type="number" id="port" value="${config.port}" min="3000" max="9999" aria-describedby="port-help">
-          <div id="port-help" class="help-text">Port to run the preview server on</div>
+          <label>Preview Port</label>
+          <input type="number" id="port" value="${config.port}" min="3000" max="9999">
+          <div class="help-text">Port to run the preview server on</div>
         </div>
 
         <div class="field">
-          <label for="aiMode">AI Mode <span class="help-text">(Default: ${defaultMode})</span></label>
+          <label>AI Mode <span class="help-text">(Default: ${defaultMode})</span></label>
           <select id="aiMode">
             <option value="mock" ${config.aiMode === "mock" ? "selected" : ""}>Mock (Simulated)</option>
             <option value="local" ${config.aiMode === "local" ? "selected" : ""}>Local LLM (Ollama/LFM)</option>
@@ -207,36 +207,36 @@ export class ConfigWebviewProvider implements vscode.WebviewViewProvider {
 
         <div id="localOptions" class="local-options" style="display: ${config.aiMode === "local" ? "block" : "none"}">
           <div class="field">
-            <label for="aiEndpoint">Ollama Endpoint</label>
-            <input type="text" id="aiEndpoint" value="${config.aiEndpoint}" placeholder="${defaultEndpoint}" aria-describedby="aiEndpoint-help">
-            <div id="aiEndpoint-help" class="help-text">Default: ${defaultEndpoint}</div>
+            <label>Ollama Endpoint</label>
+            <input type="text" id="aiEndpoint" value="${config.aiEndpoint}" placeholder="${defaultEndpoint}">
+            <div class="help-text">Default: ${defaultEndpoint}</div>
           </div>
           <div class="field">
-            <label for="aiModel">Model Name</label>
-            <input type="text" id="aiModel" value="${config.aiModel}" placeholder="${defaultModel}" aria-describedby="aiModel-help">
-            <div id="aiModel-help" class="help-text">Default: ${defaultModel}</div>
+            <label>Model Name</label>
+            <input type="text" id="aiModel" value="${config.aiModel}" placeholder="${defaultModel}">
+            <div class="help-text">Default: ${defaultModel}</div>
           </div>
         </div>
 
         <div class="field">
-          <label for="entryPoint">Entry Point</label>
-          <input type="text" id="entryPoint" value="${config.entryPoint}" placeholder="e.g. TestApp.tsx" aria-describedby="entryPoint-help">
-          <div id="entryPoint-help" class="help-text">Leave blank to use default (index.tsx)</div>
+          <label>Entry Point</label>
+          <input type="text" id="entryPoint" value="${config.entryPoint}" placeholder="e.g. TestApp.tsx">
+          <div class="help-text">Leave blank to use default (index.tsx)</div>
         </div>
 
         <div class="field checkbox-field">
-          <input type="checkbox" id="autoOpen" ${config.autoOpen ? "checked" : ""} aria-describedby="autoOpen-help">
+          <input type="checkbox" id="autoOpen" ${config.autoOpen ? "checked" : ""}>
           <div class="checkbox-label">
             <label for="autoOpen" style="margin-bottom:0">Auto-open Browser</label>
-            <div id="autoOpen-help" class="help-text">Open browser when launch starts</div>
+            <div class="help-text">Open browser when launch starts</div>
           </div>
         </div>
 
         <div class="field checkbox-field">
-          <input type="checkbox" id="hotReload" ${config.hotReload ? "checked" : ""} aria-describedby="hotReload-help">
+          <input type="checkbox" id="hotReload" ${config.hotReload ? "checked" : ""}>
           <div class="checkbox-label">
             <label for="hotReload" style="margin-bottom:0">Hot Reload</label>
-            <div id="hotReload-help" class="help-text">Reload page on code changes</div>
+            <div class="help-text">Reload page on code changes</div>
           </div>
         </div>
 
