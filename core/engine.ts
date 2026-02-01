@@ -62,6 +62,9 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
     // Track CSS files we've stubbed to avoid repeated filesystem checks
     const stubbedCssFiles = new Set<string>();
 
+    // Cache detected entry point to avoid repeated filesystem checks
+    let detectedEntryPoint: string | null = null;
+
     return {
         name: "genai-preview-transform",
         enforce: "pre",
@@ -194,18 +197,22 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             let entryPoint = config.entryPoint || "";
 
             if (!entryPoint) {
-                const possibleEntries = [
-                    "index.tsx",
-                    "src/main.tsx",
-                    "src/index.tsx",
-                    "main.tsx",
-                ];
-                for (const entry of possibleEntries) {
-                    if (fs.existsSync(path.join(projectPath, entry))) {
-                        entryPoint = "/" + entry;
-                        break;
+                if (detectedEntryPoint === null) {
+                    const possibleEntries = [
+                        "index.tsx",
+                        "src/main.tsx",
+                        "src/index.tsx",
+                        "main.tsx",
+                    ];
+                    detectedEntryPoint = "";
+                    for (const entry of possibleEntries) {
+                        if (fs.existsSync(path.join(projectPath, entry))) {
+                            detectedEntryPoint = "/" + entry;
+                            break;
+                        }
                     }
                 }
+                entryPoint = detectedEntryPoint;
             } else {
                 // Ensure entryPoint starts with /
                 if (!entryPoint.startsWith("/")) {
@@ -214,9 +221,11 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             }
 
             if (entryPoint && !newHtml.includes(entryPoint)) {
+                // Sanitize entryPoint to prevent XSS via attribute injection
+                const safeEntryPoint = entryPoint.replace(/"/g, "&quot;");
                 newHtml = newHtml.replace(
                     "</body>",
-                    `<script type="module" src="${entryPoint}"></script>\n</body>`,
+                    `<script type="module" src="${safeEntryPoint}"></script>\n</body>`,
                 );
             }
 
