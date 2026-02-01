@@ -26,12 +26,13 @@ export class ActiveWebviewProvider implements vscode.WebviewViewProvider {
 
     try {
       const running = this.previewManager.getRunningPreviews();
+      const networkIp = this.getNetworkIp();
       const previewsHtml = await Promise.all(
         running.map(async (p: StoredProject) => {
           const url = this.previewManager.getPreviewUrl(p.path);
           const networkUrl = url?.replace(
             "localhost",
-            this.getNetworkIp() || "localhost",
+            networkIp || "localhost",
           );
           const qrCodeData = networkUrl
             ? await QRCode.toDataURL(networkUrl)
