@@ -214,9 +214,11 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             }
 
             if (entryPoint && !newHtml.includes(entryPoint)) {
+                // Sanitize entryPoint to prevent XSS via attribute injection
+                const safeEntryPoint = entryPoint.replace(/"/g, "&quot;");
                 newHtml = newHtml.replace(
                     "</body>",
-                    `<script type="module" src="${entryPoint}"></script>\n</body>`,
+                    `<script type="module" src="${safeEntryPoint}"></script>\n</body>`,
                 );
             }
 
