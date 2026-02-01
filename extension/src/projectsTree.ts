@@ -200,9 +200,9 @@ export class ProjectsTreeProvider implements vscode.TreeDataProvider<ProjectItem
             return;
         }
 
-        const usedPorts = this.projects.map((p) => p.config.port);
+        const usedPorts = new Set(this.projects.map((p) => p.config.port));
         let port = 4000;
-        while (usedPorts.includes(port)) port++;
+        while (usedPorts.has(port)) port++;
 
         log(`Assigned port ${port} for ${name}`);
 
