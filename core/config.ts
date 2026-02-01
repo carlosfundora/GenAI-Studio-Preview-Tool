@@ -7,7 +7,7 @@
  * 3. Environment variables
  */
 
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -33,6 +33,8 @@ export interface LocationConfig {
     latitude: number;
     longitude: number;
     accuracy?: number;
+    // legacy support
+    altitude?: number;
   };
 }
 
@@ -79,78 +81,81 @@ const DEFAULT_CONFIG: GenAIPreviewConfig = {
 
 // --- Configuration Loading ---
 
-let cachedConfig: GenAIPreviewConfig | null = null;
+let cachedConfigPromise: Promise<GenAIPreviewConfig> | null = null;
 
-export function loadConfig(projectPath?: string): GenAIPreviewConfig {
-  if (cachedConfig) return cachedConfig;
+export function loadConfigAsync(projectPath?: string): Promise<GenAIPreviewConfig> {
+  if (cachedConfigPromise) return cachedConfigPromise;
 
-  let config = { ...DEFAULT_CONFIG };
+  cachedConfigPromise = (async () => {
+    let config = { ...DEFAULT_CONFIG };
 
-  // 1. Load user-level config
-  const userConfigPath = path.join(os.homedir(), ".genairc.json");
-  if (fs.existsSync(userConfigPath)) {
+    // 1. Load user-level config
+    const userConfigPath = path.join(os.homedir(), ".genairc.json");
     try {
-      const userConfig = JSON.parse(fs.readFileSync(userConfigPath, "utf-8"));
+      const content = await fs.readFile(userConfigPath, "utf-8");
+      const userConfig = JSON.parse(content);
       config = deepMerge(config, userConfig);
-    } catch (e) {
-      console.warn("[GenAI Preview] Failed to parse ~/.genairc.json:", e);
-    }
-  }
-
-  // 2. Load project-level config
-  if (projectPath) {
-    const projectConfigPath = path.join(projectPath, ".genairc.json");
-    if (fs.existsSync(projectConfigPath)) {
-      try {
-        const projectConfig = JSON.parse(
-          fs.readFileSync(projectConfigPath, "utf-8"),
-        );
-        config = deepMerge(config, projectConfig);
-      } catch (e) {
-        console.warn("[GenAI Preview] Failed to parse .genairc.json:", e);
+    } catch (e: any) {
+      if (e.code !== "ENOENT") {
+        console.warn("[GenAI Preview] Failed to parse ~/.genairc.json:", e);
       }
     }
-  }
 
-  // 3. Override with environment variables
-  if (process.env.GENAI_ENDPOINT) {
-    config.ai.endpoint = process.env.GENAI_ENDPOINT;
-  }
-  if (process.env.GENAI_ENTRYPOINT) {
-    config.entryPoint = process.env.GENAI_ENTRYPOINT;
-  }
-  if (process.env.GENAI_MODE) {
-    config.ai.mode = process.env.GENAI_MODE as "mock" | "local" | "remote";
-  }
-  if (process.env.GENAI_MODEL) {
-    config.ai.models.text = process.env.GENAI_MODEL;
-  }
-  if (process.env.GENAI_GPU === "true") {
-    config.ai.gpuPassthrough = true;
-  }
-  if (process.env.GENAI_API_KEY) {
-    config.ai.apiKey = process.env.GENAI_API_KEY;
-  }
-  if (process.env.GENAI_PORT) {
-    const parsed = parseInt(process.env.GENAI_PORT, 10);
-    if (!isNaN(parsed)) {
-      config.port = parsed;
+    // 2. Load project-level config
+    if (projectPath) {
+      const projectConfigPath = path.join(projectPath, ".genairc.json");
+      try {
+        const content = await fs.readFile(projectConfigPath, "utf-8");
+        const projectConfig = JSON.parse(content);
+        config = deepMerge(config, projectConfig);
+      } catch (e: any) {
+        if (e.code !== "ENOENT") {
+          console.warn("[GenAI Preview] Failed to parse .genairc.json:", e);
+        }
+      }
     }
-  }
 
-  cachedConfig = config;
-  return config;
+    // 3. Override with environment variables
+    if (process.env.GENAI_ENDPOINT) {
+      config.ai.endpoint = process.env.GENAI_ENDPOINT;
+    }
+    if (process.env.GENAI_ENTRYPOINT) {
+      config.entryPoint = process.env.GENAI_ENTRYPOINT;
+    }
+    if (process.env.GENAI_MODE) {
+      config.ai.mode = process.env.GENAI_MODE as "mock" | "local" | "remote";
+    }
+    if (process.env.GENAI_MODEL) {
+      config.ai.models.text = process.env.GENAI_MODEL;
+    }
+    if (process.env.GENAI_GPU === "true") {
+      config.ai.gpuPassthrough = true;
+    }
+    if (process.env.GENAI_API_KEY) {
+      config.ai.apiKey = process.env.GENAI_API_KEY;
+    }
+    if (process.env.GENAI_PORT) {
+      const parsed = parseInt(process.env.GENAI_PORT, 10);
+      if (!isNaN(parsed)) {
+        config.port = parsed;
+      }
+    }
+
+    return config;
+  })();
+
+  return cachedConfigPromise;
 }
 
-export function getConfig(): GenAIPreviewConfig {
-  if (!cachedConfig) {
-    return loadConfig();
+export function getConfigAsync(): Promise<GenAIPreviewConfig> {
+  if (!cachedConfigPromise) {
+    return loadConfigAsync();
   }
-  return cachedConfig;
+  return cachedConfigPromise;
 }
 
 export function resetConfig(): void {
-  cachedConfig = null;
+  cachedConfigPromise = null;
 }
 
 // --- Utility Functions ---

@@ -1,13 +1,13 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GenAIPreviewPlugin } from '../engine.js';
-import { loadConfig } from '../config.js';
+import { loadConfigAsync } from '../config.js';
 
 // Mock loadConfig
 vi.mock('../config.js', () => ({
-  loadConfig: vi.fn(),
+  loadConfigAsync: vi.fn(),
+  getConfigAsync: vi.fn(),
   CORE_CONFIG: { GEOLOCATION_SHIM_PATH: '/shim' },
-  getConfig: vi.fn(),
 }));
 
 describe('Security: GenAIPreviewPlugin', () => {
@@ -15,7 +15,7 @@ describe('Security: GenAIPreviewPlugin', () => {
     vi.resetAllMocks();
   });
 
-  it('should escape malicious script tags in injected configuration', () => {
+  it('should escape malicious script tags in injected configuration', async () => {
     const maliciousConfig = {
       scanPaths: [],
       externalProjects: [],
@@ -32,7 +32,7 @@ describe('Security: GenAIPreviewPlugin', () => {
       autoShutdown: { enabled: false, timeoutMs: 0 },
     };
 
-    vi.mocked(loadConfig).mockReturnValue(maliciousConfig as any);
+    vi.mocked(loadConfigAsync).mockResolvedValue(maliciousConfig as any);
 
     const plugin = GenAIPreviewPlugin('/dummy/path');
     const transformIndexHtml = (plugin as any).transformIndexHtml;
@@ -40,7 +40,7 @@ describe('Security: GenAIPreviewPlugin', () => {
     expect(transformIndexHtml).toBeDefined();
 
     const html = '<html><head></head><body></body></html>';
-    const result = transformIndexHtml(html);
+    const result = await transformIndexHtml(html);
 
     // Check for safe escaping
     expect(result).not.toContain('</script><script>alert("XSS")</script>');

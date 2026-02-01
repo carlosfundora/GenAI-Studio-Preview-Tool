@@ -3,7 +3,7 @@ import { type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Plugin, ViteDevServer } from "vite";
-import { loadConfig } from "./config.js";
+import { getConfigAsync, loadConfigAsync } from "./config.js";
 
 // @ts-ignore - eval hides import.meta from TS when compiling to CommonJS
 const _dirname =
@@ -58,7 +58,7 @@ export const CORE_CONFIG = {
  * A Vite plugin that prepares AI Studio applications for local preview without modification.
  */
 export function GenAIPreviewPlugin(projectPath: string): Plugin {
-    const config = loadConfig(projectPath);
+    const configPromise = loadConfigAsync(projectPath);
     // Track CSS files we've stubbed to avoid repeated filesystem checks
     const stubbedCssFiles = new Set<string>();
 
@@ -94,7 +94,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             return null;
         },
 
-        load(id: string) {
+        async load(id: string) {
             if (id === "\0genai-shared-styles") {
                 if (fs.existsSync(CORE_CONFIG.SHARED_STYLES_PATH)) {
                     return fs.readFileSync(
@@ -105,6 +105,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                 return "/* GenAI Studio Preview: Shared Styles Polyfill (Empty) */";
             }
             if (id === "\0genai-preview-config") {
+                const config = await configPromise;
                 return `export default ${JSON.stringify(config)};`;
             }
 
@@ -131,7 +132,8 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             return null;
         },
 
-        transformIndexHtml(html: string) {
+        async transformIndexHtml(html: string) {
+            const config = await configPromise;
             let newHtml = html;
 
             // 1. Remove importmap to force usage of local node_modules
@@ -229,7 +231,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
  * Lifecycle plugin for browser close detection and auto-shutdown.
  */
 export function GenAILifecyclePlugin(): Plugin {
-    const config = loadConfig();
+    const configPromise = loadConfigAsync();
     let lastHeartbeat = Date.now();
     let hasReceivedFirstHeartbeat = false;
     let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -238,7 +240,8 @@ export function GenAILifecyclePlugin(): Plugin {
     return {
         name: "genai-lifecycle",
 
-        configureServer(server: ViteDevServer) {
+        async configureServer(server: ViteDevServer) {
+            const config = await configPromise;
             if (!config.autoShutdown.enabled) return;
 
             // Heartbeat endpoint
@@ -292,4 +295,4 @@ export function GenAILifecyclePlugin(): Plugin {
 }
 
 // Re-export config for use in other modules
-export { getConfig, loadConfig, type GenAIPreviewConfig } from "./config.js";
+export { getConfigAsync, loadConfigAsync, type GenAIPreviewConfig } from "./config.js";

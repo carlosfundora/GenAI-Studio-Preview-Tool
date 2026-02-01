@@ -120,9 +120,9 @@ async function launchVersion(version: VersionInfo) {
   const port = await portfinder.getPortPromise();
 
   // Import the lifecycle plugin dynamically to avoid circular deps
-  const { GenAILifecyclePlugin, loadConfig } =
+  const { GenAILifecyclePlugin, loadConfigAsync } =
     await import("../core/engine.js");
-  const config = loadConfig(version.path);
+  const config = await loadConfigAsync(version.path);
 
   const server = await createServer({
     configFile: path.join(version.path, "vite.config.ts"),

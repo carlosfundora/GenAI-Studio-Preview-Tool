@@ -10,7 +10,7 @@
  * - Local LLM routing via configuration
  */
 
-import { getConfig } from "../config.js";
+import { getConfigAsync } from "../config.js";
 
 // ============================================================================
 // ENUMS
@@ -157,7 +157,7 @@ class GenerativeModel {
   ): Promise<GenerateContentResult> {
     console.log("[Mock GenAI] Generating content for prompt:", prompt);
 
-    const appConfig = getConfig();
+    const appConfig = await getConfigAsync();
     const promptText =
       typeof prompt === "string" ? prompt : JSON.stringify(prompt);
 
@@ -276,7 +276,7 @@ class GenerativeModel {
   ): AsyncGenerator<GenerateContentStreamChunk> {
     console.log("[Mock GenAI] Streaming content for prompt:", prompt);
 
-    const appConfig = getConfig();
+    const appConfig = await getConfigAsync();
     const promptText =
       typeof prompt === "string" ? prompt : JSON.stringify(prompt);
 
@@ -410,7 +410,7 @@ export class EmbeddingModel {
       typeof content === "string" ? content : JSON.stringify(content);
     console.log("[Mock GenAI] Embedding content:", text.slice(0, 50) + "...");
 
-    const appConfig = getConfig();
+    const appConfig = await getConfigAsync();
 
     if (appConfig.ai.mode === "local") {
       try {
