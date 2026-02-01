@@ -7,9 +7,14 @@ RUN npm install -g pnpm tsx
 # Set working directory
 WORKDIR /app
 
-# We expect the Projects directory to be mounted at /app/Projects
-# Pre-install dependencies for the launcher itself
-# (In a real open source repo, we might copy the whole tool but here we mount)
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
 
 # Expose ports for Vite preview servers
 EXPOSE 4000-4010

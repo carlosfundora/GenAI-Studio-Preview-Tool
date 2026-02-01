@@ -66,7 +66,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
         name: "genai-preview-transform",
         enforce: "pre",
 
-        resolveId(id: string, importer?: string) {
+        async resolveId(id: string, importer?: string) {
             // Polyfill missing shared styles regardless of relative path depth
             if (id.includes("shared-module-styles.css")) {
                 return "\0genai-shared-styles";
@@ -83,7 +83,9 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                 const absolutePath = path.resolve(importerDir, id);
 
                 // If CSS file doesn't exist, stub it
-                if (!fs.existsSync(absolutePath)) {
+                try {
+                    await fs.promises.access(absolutePath);
+                } catch {
                     const virtualId = `\0genai-css-stub:${absolutePath}`;
                     stubbedCssFiles.add(virtualId);
                     console.log(`[GenAI Preview] Stubbing missing CSS: ${id}`);
@@ -131,7 +133,7 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
             return null;
         },
 
-        transformIndexHtml(html: string) {
+        async transformIndexHtml(html: string) {
             let newHtml = html;
 
             // 1. Remove importmap to force usage of local node_modules
@@ -200,11 +202,24 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                     "src/index.tsx",
                     "main.tsx",
                 ];
-                for (const entry of possibleEntries) {
-                    if (fs.existsSync(path.join(projectPath, entry))) {
-                        entryPoint = "/" + entry;
-                        break;
-                    }
+
+                // Check for entry points in parallel to avoid blocking
+                const results = await Promise.all(
+                    possibleEntries.map(async (entry) => {
+                        try {
+                            await fs.promises.access(
+                                path.join(projectPath, entry),
+                            );
+                            return entry;
+                        } catch {
+                            return null;
+                        }
+                    })
+                );
+
+                const found = results.find((entry) => entry !== null);
+                if (found) {
+                    entryPoint = "/" + found;
                 }
             } else {
                 // Ensure entryPoint starts with /
