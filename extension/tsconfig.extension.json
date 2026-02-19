@@ -16,7 +16,8 @@
     "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
-      "vite": ["../node_modules/vite"]
+      "vite": ["../node_modules/vite"],
+      "@core/*": ["../../core/*"]
     }
   },
   "include": ["src/**/*", "../core/**/*"],

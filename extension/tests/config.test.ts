@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadConfig, resetConfig } from "../../core/config";
+import { loadConfig, resetConfig } from "@core/config";
 
 // Mock fs to avoid reading real files
 vi.mock("fs");

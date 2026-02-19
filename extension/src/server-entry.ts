@@ -1,11 +1,10 @@
 import { createRequire } from "module";
 import path from "path";
-// @ts-ignore - Will be resolved by tsconfig update
 import {
     CORE_CONFIG,
     GenAILifecyclePlugin,
     GenAIPreviewPlugin,
-} from "../../core/engine";
+} from "@core/engine";
 
 // Rudimentary arg parsing to avoid dependencies
 function getArg(name: string): string | undefined {

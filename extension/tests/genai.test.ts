@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GoogleGenerativeAI } from "../../core/mocks/genai";
+import { GoogleGenerativeAI } from "@core/mocks/genai";
 
 describe("GoogleGenerativeAI Mock", () => {
   const genAI = new GoogleGenerativeAI("test-api-key");

@@ -42,6 +42,9 @@ async function buildExtension() {
       'vscode',  // Provided by VS Code runtime
       'vite',    // We spawn vite as a separate process, don't bundle it
     ],
+    alias: {
+      '@core': path.resolve(__dirname, '../core'),
+    },
     logLevel: 'warning',
     plugins: [esbuildProblemMatcherPlugin]
   });
@@ -71,6 +74,9 @@ async function buildServerEntry() {
       'vscode',
       'vite',  // Vite is loaded at runtime for the dev server
     ],
+    alias: {
+      '@core': path.resolve(__dirname, '../core'),
+    },
     logLevel: 'warning',
     plugins: [esbuildProblemMatcherPlugin]
   });
