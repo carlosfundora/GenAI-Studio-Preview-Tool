@@ -431,10 +431,14 @@ export class EmbeddingModel {
     }
 
     // Mock: return deterministic 768-dimensional vector based on text hash
-    const hash = text.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    const values = Array(768)
-      .fill(0)
-      .map((_, i) => Math.sin(hash + i) * 0.5);
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash += text.charCodeAt(i);
+    }
+    const values = new Array(768);
+    for (let i = 0; i < 768; i++) {
+      values[i] = Math.sin(hash + i) * 0.5;
+    }
     return { embedding: { values } };
   }
 
