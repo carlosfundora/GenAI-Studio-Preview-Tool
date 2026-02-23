@@ -50,8 +50,8 @@ async function startServer() {
                 open: false,
             },
             plugins: [
-                GenAIPreviewPlugin(projectPath!) as any,
-                GenAILifecyclePlugin() as any,
+                (await GenAIPreviewPlugin(projectPath!)) as any,
+                (await GenAILifecyclePlugin()) as any,
             ],
             resolve: {
                 alias: [

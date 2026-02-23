@@ -3,7 +3,7 @@ import { type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Plugin, ViteDevServer } from "vite";
-import { loadConfig } from "./config.js";
+import { loadConfigAsync } from "./config.js";
 
 // @ts-ignore - eval hides import.meta from TS when compiling to CommonJS
 const _dirname =
@@ -57,8 +57,8 @@ export const CORE_CONFIG = {
 /**
  * A Vite plugin that prepares AI Studio applications for local preview without modification.
  */
-export function GenAIPreviewPlugin(projectPath: string): Plugin {
-    const config = loadConfig(projectPath);
+export async function GenAIPreviewPlugin(projectPath: string): Promise<Plugin> {
+    const config = await loadConfigAsync(projectPath);
     // Track CSS files we've stubbed to avoid repeated filesystem checks
     const stubbedCssFiles = new Set<string>();
 
@@ -167,16 +167,32 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
                 );
             }
 
-            // 4. Inject geolocation config if not passthrough
-            if (config.location.mode !== "passthrough") {
-                // Safe stringify to prevent XSS via HTML injection
-                const safeConfig = JSON.stringify({
-                    location: config.location,
-                }).replace(/</g, "\\u003c");
-                const geoConfigScript = `
+            // 4. Inject Full Config for Browser Access
+            // Security: Filter out sensitive fields (apiKey)
+            const publicConfig = {
+                ...config,
+                ai: {
+                    ...config.ai,
+                    apiKey: undefined, // Strip API key
+                },
+            };
+
+            // Safe stringify to prevent XSS via HTML injection
+            const safeConfig = JSON.stringify(publicConfig).replace(
+                /</g,
+                "\\u003c",
+            );
+            const configScript = `
 <script>
   window.__GENAI_PREVIEW_CONFIG__ = ${safeConfig};
-</script>
+</script>`;
+
+            // Append config script
+            newHtml = newHtml.replace("</head>", `${configScript}\n</head>`);
+
+            // Inject geolocation shim if not passthrough
+            if (config.location.mode !== "passthrough") {
+                 const geoConfigScript = `
 <script type="module" src="/@fs${CORE_CONFIG.GEOLOCATION_SHIM_PATH}"></script>`;
                 newHtml = newHtml.replace(
                     "</head>",
@@ -243,8 +259,8 @@ export function GenAIPreviewPlugin(projectPath: string): Plugin {
 /**
  * Lifecycle plugin for browser close detection and auto-shutdown.
  */
-export function GenAILifecyclePlugin(): Plugin {
-    const config = loadConfig();
+export async function GenAILifecyclePlugin(): Promise<Plugin> {
+    const config = await loadConfigAsync();
     let lastHeartbeat = Date.now();
     let hasReceivedFirstHeartbeat = false;
     let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -307,4 +323,4 @@ export function GenAILifecyclePlugin(): Plugin {
 }
 
 // Re-export config for use in other modules
-export { getConfig, loadConfig, type GenAIPreviewConfig } from "./config.js";
+export { getConfig, getConfigAsync, loadConfig, loadConfigAsync, type GenAIPreviewConfig } from "./config.js";

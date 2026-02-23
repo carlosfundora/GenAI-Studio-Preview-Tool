@@ -7,9 +7,10 @@
  * 3. Environment variables
  */
 
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
+// Removed top-level Node imports for browser compatibility
+// import fs from "node:fs";
+// import os from "node:os";
+// import path from "node:path";
 
 // --- Type Definitions ---
 
@@ -81,65 +82,116 @@ const DEFAULT_CONFIG: GenAIPreviewConfig = {
 
 let cachedConfig: GenAIPreviewConfig | null = null;
 
-export function loadConfig(projectPath?: string): GenAIPreviewConfig {
+/**
+ * Asynchronously loads configuration.
+ * Safe for use in both Node.js and Browser environments.
+ */
+export async function loadConfigAsync(projectPath?: string): Promise<GenAIPreviewConfig> {
   if (cachedConfig) return cachedConfig;
 
   let config = { ...DEFAULT_CONFIG };
 
-  // 1. Load user-level config
-  const userConfigPath = path.join(os.homedir(), ".genairc.json");
-  if (fs.existsSync(userConfigPath)) {
-    try {
-      const userConfig = JSON.parse(fs.readFileSync(userConfigPath, "utf-8"));
-      config = deepMerge(config, userConfig);
-    } catch (e) {
-      console.warn("[GenAI Preview] Failed to parse ~/.genairc.json:", e);
-    }
+  // 1. Browser Environment Check
+  if (typeof window !== "undefined" && (window as any).__GENAI_PREVIEW_CONFIG__) {
+    // We are in browser and have injected config
+    config = deepMerge(config, (window as any).__GENAI_PREVIEW_CONFIG__);
+    cachedConfig = config;
+    return config;
   }
 
-  // 2. Load project-level config
-  if (projectPath) {
-    const projectConfigPath = path.join(projectPath, ".genairc.json");
-    if (fs.existsSync(projectConfigPath)) {
-      try {
-        const projectConfig = JSON.parse(
-          fs.readFileSync(projectConfigPath, "utf-8"),
-        );
+  // 2. Node.js Environment Loading
+  try {
+    const fs = await import("node:fs/promises");
+    const os = await import("node:os");
+    const path = await import("node:path");
+
+    // Load user-level config
+    const userConfigPath = path.join(os.homedir(), ".genairc.json");
+    try {
+      await fs.access(userConfigPath);
+      const content = await fs.readFile(userConfigPath, "utf-8");
+      const userConfig = JSON.parse(content);
+      config = deepMerge(config, userConfig);
+    } catch (e: any) {
+       if (e.code !== 'ENOENT') {
+          console.warn("[GenAI Preview] Failed to parse ~/.genairc.json:", e);
+       }
+    }
+
+    // Load project-level config
+    if (projectPath) {
+      const projectConfigPath = path.join(projectPath, ".genairc.json");
+       try {
+        await fs.access(projectConfigPath);
+        const content = await fs.readFile(projectConfigPath, "utf-8");
+        const projectConfig = JSON.parse(content);
         config = deepMerge(config, projectConfig);
-      } catch (e) {
-        console.warn("[GenAI Preview] Failed to parse .genairc.json:", e);
+      } catch (e: any) {
+         if (e.code !== 'ENOENT') {
+            console.warn("[GenAI Preview] Failed to parse .genairc.json:", e);
+         }
       }
     }
+  } catch (e) {
+     // Dynamic import failed (likely browser without injected config) or other error
+     // Proceed with defaults or env vars if available
   }
 
   // 3. Override with environment variables
-  if (process.env.GENAI_ENDPOINT) {
-    config.ai.endpoint = process.env.GENAI_ENDPOINT;
-  }
-  if (process.env.GENAI_ENTRYPOINT) {
-    config.entryPoint = process.env.GENAI_ENTRYPOINT;
-  }
-  if (process.env.GENAI_MODE) {
-    config.ai.mode = process.env.GENAI_MODE as "mock" | "local" | "remote";
-  }
-  if (process.env.GENAI_MODEL) {
-    config.ai.models.text = process.env.GENAI_MODEL;
-  }
-  if (process.env.GENAI_GPU === "true") {
-    config.ai.gpuPassthrough = true;
-  }
-  if (process.env.GENAI_API_KEY) {
-    config.ai.apiKey = process.env.GENAI_API_KEY;
-  }
-  if (process.env.GENAI_PORT) {
-    const parsed = parseInt(process.env.GENAI_PORT, 10);
-    if (!isNaN(parsed)) {
-      config.port = parsed;
-    }
+  if (typeof process !== "undefined" && process.env) {
+      if (process.env.GENAI_ENDPOINT) {
+        config.ai.endpoint = process.env.GENAI_ENDPOINT;
+      }
+      if (process.env.GENAI_ENTRYPOINT) {
+        config.entryPoint = process.env.GENAI_ENTRYPOINT;
+      }
+      if (process.env.GENAI_MODE) {
+        config.ai.mode = process.env.GENAI_MODE as "mock" | "local" | "remote";
+      }
+      if (process.env.GENAI_MODEL) {
+        config.ai.models.text = process.env.GENAI_MODEL;
+      }
+      if (process.env.GENAI_GPU === "true") {
+        config.ai.gpuPassthrough = true;
+      }
+      if (process.env.GENAI_API_KEY) {
+        config.ai.apiKey = process.env.GENAI_API_KEY;
+      }
+      if (process.env.GENAI_PORT) {
+        const parsed = parseInt(process.env.GENAI_PORT, 10);
+        if (!isNaN(parsed)) {
+          config.port = parsed;
+        }
+      }
   }
 
   cachedConfig = config;
   return config;
+}
+
+export async function getConfigAsync(): Promise<GenAIPreviewConfig> {
+  if (!cachedConfig) {
+    return loadConfigAsync();
+  }
+  return cachedConfig;
+}
+
+/**
+ * @deprecated Use loadConfigAsync() instead. This function no longer loads from disk synchronously.
+ */
+export function loadConfig(projectPath?: string): GenAIPreviewConfig {
+  if (cachedConfig) return cachedConfig;
+
+  // Check if we can synchronously access browser config
+  if (typeof window !== "undefined" && (window as any).__GENAI_PREVIEW_CONFIG__) {
+    const config = deepMerge({ ...DEFAULT_CONFIG }, (window as any).__GENAI_PREVIEW_CONFIG__);
+    cachedConfig = config;
+    return config;
+  }
+
+  throw new Error(
+    "Synchronous loadConfig() called before configuration was loaded. Ensure loadConfigAsync() is awaited first.",
+  );
 }
 
 export function getConfig(): GenAIPreviewConfig {
